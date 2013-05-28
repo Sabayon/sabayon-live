@@ -34,7 +34,6 @@ install:
 
 	install -d $(DESTDIR)/$(USBINDIR)
 	install -m 0755 net-setup $(DESTDIR)/$(USBINDIR)/
-	install -m 0755 x-setup-configuration $(DESTDIR)/$(USBINDIR)/
 	
 	install -d $(DESTDIR)/$(UBINDIR)
 	install -m 0755 livespawn $(DESTDIR)/$(UBINDIR)/

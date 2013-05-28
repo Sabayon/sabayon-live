@@ -23,7 +23,7 @@ if [ -e /first_time_run ] || [ ! -e /etc/gpu-detector.conf ] \
     || [ -n "${REDETECT}" ]; then
     echo "Configuring GPUs and input devices for the first time"
     lspci | grep ' VGA ' > /etc/gpu-detector.conf
-    /usr/sbin/x-setup-configuration
+    /sbin/gpu-configuration
     exit 0
 fi
 
@@ -40,7 +40,7 @@ if [ "${lspci_vga}" != "${stored_vga}" ]; then
         echo "${infostr_skip}, only updating GPU information file"
     else
         echo "${infostr_run}"
-        /usr/sbin/x-setup-configuration
+        /sbin/gpu-configuration
     fi
     echo "${lspci_vga}" > /etc/gpu-detector.conf
     exit 0

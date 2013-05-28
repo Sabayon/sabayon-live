@@ -242,7 +242,7 @@ EOF
     fi
 
     mv -f /etc/X11/xorg.conf /etc/X11/xorg.conf.old
-    /usr/sbin/x-setup-configuration
+    /sbin/gpu-configuration
 
     echo "Note: you may want to look to /etc/X11/xorg.conf.d (if it exists), too."
 }

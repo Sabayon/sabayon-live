@@ -14,13 +14,7 @@ setup_password() {
 }
 
 setup_x() {
-    if systemd_running; then
-        [ -x /sbin/gpu-configuration ] && /sbin/gpu-configuration
-    else
-        while [ -e "/etc/x-setup-configuration-running" ]; do
-            sleep 1
-        done
-    fi
+    [ -x /sbin/gpu-configuration ] && /sbin/gpu-configuration
 }
 
 setup_settingsd() {
