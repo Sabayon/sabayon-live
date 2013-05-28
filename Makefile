@@ -3,6 +3,7 @@ DESTDIR =
 UBINDIR ?= /usr/bin
 LIBDIR ?= /usr/lib
 SBINDIR ?= /sbin
+USBINDIR ?= /usr/sbin
 BINDIR ?= /bin
 LIBEXECDIR ?= /usr/libexec
 SYSCONFDIR ?= /etc
@@ -26,12 +27,13 @@ install:
 
 	install -d $(DESTDIR)/$(SBINDIR)
 	install -d $(DESTDIR)/$(BINDIR)
-	install -m 0755 x-setup-configuration $(DESTDIR)/$(SBINDIR)/
-	install -m 0755 net-setup $(DESTDIR)/$(SBINDIR)/
 	install -m 0755 logscript.sh $(DESTDIR)/$(SBINDIR)/
 	install -m 0755 *-functions.sh $(DESTDIR)/$(SBINDIR)/
 	install -m 0755 bashlogin $(DESTDIR)/$(BINDIR)/
 	install -m 0755 vga-cmd-parser $(DESTDIR)/$(BINDIR)/
+
+	install -m 0755 net-setup $(DESTDIR)/$(SBINDIR)/
+	install -m 0755 x-setup-configuration $(DESTDIR)/$(SBINDIR)/
 	
 	install -d $(DESTDIR)/$(UBINDIR)
 	install -m 0755 livespawn $(DESTDIR)/$(UBINDIR)/
@@ -39,8 +41,8 @@ install:
 	install -m 0755 sabayon-live-check $(DESTDIR)/$(UBINDIR)/
 	install -m 0755 sabayon-welcome-loader $(DESTDIR)/$(UBINDIR)/
 
-	install -d $(DESTDIR)/$(SYSCONFDIR)
-	install -m 0644 sabayon-welcome-loader.desktop $(DESTDIR)/$(SYSCONFDIR)/
+	install -d $(DESTDIR)/$(SYSCONFDIR)/sabayon
+	install -m 0644 sabayon-welcome-loader.desktop $(DESTDIR)/$(SYSCONFDIR)/sabayon
 
 	install -d $(DESTDIR)/$(SYSTEMD_UNITDIR)/
 	install -m 0644 *.service $(DESTDIR)/$(SYSTEMD_UNITDIR)/
