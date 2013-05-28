@@ -1,0 +1,11 @@
+#!/sbin/runscript
+
+description="Eject LiveCD/DVD at live system shutdown/reboot"
+
+depend() {
+	after *
+}
+
+start() {
+	/usr/libexec/cdeject.sh
+}
