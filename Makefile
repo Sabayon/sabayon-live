@@ -32,8 +32,8 @@ install:
 	install -m 0755 bashlogin $(DESTDIR)/$(BINDIR)/
 	install -m 0755 vga-cmd-parser $(DESTDIR)/$(BINDIR)/
 
-	install -m 0755 net-setup $(DESTDIR)/$(SBINDIR)/
-	install -m 0755 x-setup-configuration $(DESTDIR)/$(SBINDIR)/
+	install -m 0755 net-setup $(DESTDIR)/$(USBINDIR)/
+	install -m 0755 x-setup-configuration $(DESTDIR)/$(USBINDIR)/
 	
 	install -d $(DESTDIR)/$(UBINDIR)
 	install -m 0755 livespawn $(DESTDIR)/$(UBINDIR)/
