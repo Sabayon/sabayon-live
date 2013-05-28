@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ ! -d /proc/bus/pci ]; then
+	echo "PCI bus not available" >&2
+	exit 0
+fi
+
 . /sbin/sabayon-functions.sh
 
 REDETECT=$(cat /proc/cmdline | grep "gpudetect")
