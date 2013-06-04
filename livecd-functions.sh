@@ -393,15 +393,13 @@ get_ifdesc() {
 }
 
 show_ifmenu() {
-	local old_ifs="${IFS}"
-	local opts
-	IFS=""
-	for ifname in $(ifconfig -a | grep "^[^ ]"); do
-		ifname="${ifname%% *}"
+	local opts ifname
+	for ifname in /sys/class/net/*; do
+		[[ ! -d "${ifname}" ]] && continue
+		ifname=$(basename "${ifname}")
 		[[ ${ifname} == "lo" ]] && continue
 		opts="${opts} '${ifname}' '$(get_ifdesc ${ifname})'"
 	done
-	IFS="${old_ifs}"
 
 	eval dialog --menu \"Please select the interface that you wish to configure from the list below:\" 0 0 0 $opts 2>iface
 	[[ "$?" == "1" ]] && exit
