@@ -234,10 +234,10 @@ livecd_config_ip() {
 			GATEWAY=$(tail -n 1 ${iface}.GW)
 			dialog --title "DNS server" --inputbox "Please enter a name server to use (hit enter for none:)" 20 50 2> ${iface}.DNS
 			DNS=$(tail -n 1 ${iface}.DNS)
-			/sbin/ifconfig ${iface} ${IP} broadcast ${BROADCAST} netmask ${NETMASK}
+			ifconfig ${iface} ${IP} broadcast ${BROADCAST} netmask ${NETMASK}
 			if [ -n "${GATEWAY}" ]
 			then
-				/sbin/route add default gw ${GATEWAY} dev ${iface} netmask 0.0.0.0 metric 1
+				route add default gw ${GATEWAY} dev ${iface} netmask 0.0.0.0 metric 1
 			fi
 			if [ -n "${DNS}" ]
 			then
@@ -396,7 +396,7 @@ show_ifmenu() {
 	local old_ifs="${IFS}"
 	local opts
 	IFS=""
-	for ifname in $(/sbin/ifconfig -a | grep "^[^ ]"); do
+	for ifname in $(ifconfig -a | grep "^[^ ]"); do
 		ifname="${ifname%% *}"
 		[[ ${ifname} == "lo" ]] && continue
 		opts="${opts} '${ifname}' '$(get_ifdesc ${ifname})'"
