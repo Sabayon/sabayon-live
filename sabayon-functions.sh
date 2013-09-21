@@ -267,17 +267,8 @@ sabayon_is_mce() {
 	fi
 }
 
-sabayon_is_steambox() {
-	local _is_steam=$(cat /proc/cmdline | grep steambox)
-	if [ -n "${_is_steam}" ]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
 sabayon_is_normal_boot() {
-	if ! sabayon_is_mce && ! sabayon_is_live_install && ! sabayon_is_steambox; then
+	if ! sabayon_is_mce && ! sabayon_is_live_install; then
 		return 0
 	else
 		return 1
