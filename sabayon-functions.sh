@@ -71,6 +71,11 @@ sabayon_setup_autologin() {
 sabayon_disable_autologin() {
 	# GDM - GNOME
 	if [ -f "${GDM_FILE}" ]; then
+		sed -i "/^AutomaticLoginEnable=.*/d" ${CUSTOM_GDM_FILE}
+		sed -i "/^AutomaticLogin=.*/d" ${CUSTOM_GDM_FILE}
+		sed -i "/^TimedLoginEnable=.*/d" ${CUSTOM_GDM_FILE}
+		sed -i "/^TimedLogin=.*/d" ${CUSTOM_GDM_FILE}
+		sed -i "/^TimedLoginDelay=.*/d" ${CUSTOM_GDM_FILE}
 		sed -i "s/^AutomaticLoginEnable=.*/AutomaticLoginEnable=false/" ${GDM_FILE}
 	fi
 
