@@ -42,10 +42,8 @@ setup_desktop() {
 
     # Disable memory eating services
     rm -f /etc/xdg/autostart/hplip-systray.desktop \
-        /etc/xdg/autostart/beagle-search-autostart.desktop \
         /etc/xdg/autostart/tracker*.desktop \
         /etc/xdg/autostart/magneto.desktop \
-        /etc/xdg/autostart/beagled-autostart.desktop \
         /usr/share/autostart/magneto.desktop \
         /usr/share/autostart/nepomukserver.desktop
 
