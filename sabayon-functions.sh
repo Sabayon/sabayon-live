@@ -11,6 +11,7 @@ LIVE_USER_GROUPS="audio bumblebee cdrom cdrw clamav console entropy games \
 kvm lp lpadmin messagebus plugdev polkituser portage pulse pulse-access pulse-rt \
 scanner usb users uucp vboxguest vboxusers video wheel"
 LIVE_USER=${SABAYON_USER:-sabayonuser}
+LIVE_PERSISTENT_HOME_LABEL="live:/home"
 
 sabayon_setup_autologin() {
     # GDM - GNOME
@@ -94,6 +95,17 @@ sabayon_disable_autologin() {
     if [ -f "$LIGHTDM_FILE" ]; then
         sed -i "s/^autologin-user=.*/#autologin-user=/" $LIGHTDM_FILE
     fi
+}
+
+sabayon_setup_home_mount() {
+    local target_label="${LIVE_PERSISTENT_HOME_LABEL}"
+    local device=$(blkid -L "${target_label}")
+
+    # check if there is a device available
+    [ -z "${device}" ] && return 0
+
+    mkdir -p /home || return 1
+    mount "${device}" /home || return 1
 }
 
 sabayon_setup_live_user() {

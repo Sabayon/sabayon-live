@@ -18,15 +18,9 @@ setup_x() {
 }
 
 setup_desktop() {
-    # create LIVE_USER if it does not exist
+    # setup /home persistence
+    sabayon_setup_home_mount
     sabayon_setup_live_user "${LIVE_USER}" "1000"
-    if [ "${?}" = "1" ]; then
-        # if user is already available, then setup skel
-        # Copy ${LIVE_USER} directory
-        rm -rf /home/${LIVE_USER}
-        cp /etc/skel /home/${LIVE_USER} -Rp
-        chown ${LIVE_USER}:users /home/${LIVE_USER} -R
-    fi
 
     local liveinst_desktop="/usr/share/applications/liveinst.desktop"
     local liveinst_desktop_name="$(basename ${liveinst_desktop})"
