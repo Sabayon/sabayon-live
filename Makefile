@@ -31,6 +31,7 @@ install:
 	install -m 0755 *-functions.sh $(DESTDIR)/$(SBINDIR)/
 	install -m 0755 bashlogin $(DESTDIR)/$(BINDIR)/
 	install -m 0755 vga-cmd-parser $(DESTDIR)/$(BINDIR)/
+	install -m 0755 gpu-configuration $(DESTDIR)/$(SBINDIR)/
 
 	install -d $(DESTDIR)/$(USBINDIR)
 	install -m 0755 net-setup $(DESTDIR)/$(USBINDIR)/
