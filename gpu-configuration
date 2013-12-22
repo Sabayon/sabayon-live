@@ -99,7 +99,6 @@ EndSection
 options = sys.argv[1:]
 dryrun = False
 noproprietary = False
-nvidia_forcefail = False
 nvidia_disablelegacy = False
 legacy = False
 livecd = False
@@ -182,8 +181,6 @@ for cmd in cmdline:
         noproprietary = True
     elif cmd == "nomodeset":
         nomodeset = True
-    elif cmd == "nvidia=forcefail":
-        nvidia_forcefail = True
     elif cmd == "nvidia=disablelegacy":
         nvidia_disablelegacy = True
     elif cmd == "legacy":
