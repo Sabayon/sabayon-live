@@ -179,28 +179,41 @@ sabayon_is_live() {
     fi
 }
 
+sabayon_setup_desktop_session() {
+    local usr="${1}"
+    local sess="${2}"
+
+    local dmrc_file="/home/${usr}/.dmrc"
+    echo "[Desktop]" > "${dmrc_file}"
+    echo "Session=${sess}" >> "${dmrc_file}"
+    chown "${usr}" "${dmrc_file}"
+
+    if [ -x "/usr/libexec/gdm-set-default-session" ]; then
+        # oh my fucking glorious god, this
+        # is AccountsService bullshit
+        # cross fingers
+        /usr/libexec/gdm-set-default-session "${sess}"
+    fi
+    if [ -x "/usr/libexec/gdm-set-session" ]; then
+        # GDM 3.6 support
+        /usr/libexec/gdm-set-session "${usr}" "${sess}"
+    fi
+
+    # LightDM support
+    ln -sf "${sess}.desktop" /usr/share/xsessions/default.desktop
+}
+
 sabayon_setup_gui_installer() {
     # Configure Fluxbox
-    local dmrc_file="/home/${LIVE_USER}/.dmrc"
     local flux_dir="/home/${LIVE_USER}/.fluxbox"
     local flux_startup_file="${flux_dir}/startup"
     if [ ! -d "${flux_dir}" ]; then
         mkdir "${flux_dir}" && chown "${LIVE_USER}" "${flux_dir}"
     fi
-    echo "[Desktop]" > "${dmrc_file}"
-    echo "Session=fluxbox" >> "${dmrc_file}"
-    chown sabayonuser "${dmrc_file}"
     sed -i "/installer --fullscreen/ s/^# //" "${flux_startup_file}"
-    if [ -x "/usr/libexec/gdm-set-default-session" ]; then
-        # oh my fucking glorious god, this
-        # is AccountsService bullshit
-        # cross fingers
-        /usr/libexec/gdm-set-default-session fluxbox
-    fi
-    if [ -x "/usr/libexec/gdm-set-session" ]; then
-        # GDM 3.6 support
-        /usr/libexec/gdm-set-session sabayonuser fluxbox
-    fi
+
+    sabayon_setup_desktop_session "${LIVE_USER}" "fluxbox"
+
 }
 
 # This function reads /etc/skel/.dmrc and properly
@@ -217,23 +230,7 @@ sabayon_fixup_gnome_autologin_session() {
         return 0
     fi
 
-    local sess_file="/usr/share/xsessions/${cur_session}.desktop"
-    if [ ! -f "${sess_file}" ]; then
-        return 0
-    fi
-
-    if [ -x "/usr/libexec/gdm-set-default-session" ]; then
-        # this edits /etc/gdm/custom.conf adding [daemon]\nDefaultSession=${cur_session}
-        /usr/libexec/gdm-set-default-session "${cur_session}"
-    fi
-
-    if [ -x "/usr/libexec/gdm-set-session" ]; then
-        # GDM 3.6 support
-        local users_in_users=$(cat /etc/group | grep "^users" | awk -F':' '{ print $4 }' | sed "s:,: :g")
-        for usr in ${users_in_users}; do
-            /usr/libexec/gdm-set-session "${usr}" "${cur_session}"
-        done
-    fi
+    sabayon_setup_desktop_session "${usr}" "${cur_session}"
 }
 
 sabayon_setup_text_installer() {
