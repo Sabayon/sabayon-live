@@ -184,9 +184,17 @@ sabayon_setup_desktop_session() {
     local sess="${2}"
 
     local dmrc_file="/home/${usr}/.dmrc"
-    echo "[Desktop]" > "${dmrc_file}"
-    echo "Session=${sess}" >> "${dmrc_file}"
-    chown "${usr}" "${dmrc_file}"
+    local skel_dmrc_file="/etc/skel/.dmrc"
+
+    local dmrc_f_dir=
+    for dmrc_f in "${dmrc_file}" "${skel_dmrc_file}"; do
+        dmrc_f_dir=$(dirname "${dmrc_f}")
+        [ -d "${dmrc_f_dir}" ] || continue
+
+        echo "[Desktop]" > "${dmrc_f}"
+        echo "Session=${sess}" >> "${dmrc_f}"
+        chown "${usr}" "${dmrc_f}"
+    done
 
     if [ -x "/usr/libexec/gdm-set-default-session" ]; then
         # oh my fucking glorious god, this
