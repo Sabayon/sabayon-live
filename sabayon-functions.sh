@@ -140,10 +140,6 @@ sabayon_setup_live_user() {
     return 1
 }
 
-sabayon_setup_motd() {
-    echo -e "\n\tWelcome to `cat /etc/sabayon-edition`\n\t`uname -p`\n\t`uname -o` `uname -r`\n" > /etc/motd
-}
-
 sabayon_setup_vt_autologin() {
     if openrc_running; then
         . /sbin/livecd-functions.sh
