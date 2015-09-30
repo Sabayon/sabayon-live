@@ -266,7 +266,7 @@ sabayon_setup_text_installer() {
 
 sabayon_setup_text_installer_motd() {
     echo "Welcome to Sabayon Linux installation. Text installation unfortunately it's not available:" >> /etc/motd
-    echo "to run the installation start the X server with vesa and run 'installer'" >> /etc/motd
+    echo "to run the installation start installer-text.sh" >> /etc/motd
 }
 
 sabayon_is_text_install() {
