@@ -5,6 +5,7 @@ CUSTOM_GDM_FILE="/etc/gdm/custom.conf"
 KDM_FILE="/usr/share/config/kdm/kdmrc"
 LXDM_FILE="/etc/lxdm/lxdm.conf"
 LIGHTDM_FILE="/etc/lightdm/lightdm.conf"
+SDDM_FILE="/etc/sddm.conf"
 OEM_FILE="/etc/oemlive.sh"
 OEM_FILE_NEW="/etc/oem/liveboot.sh"
 LIVE_USER_GROUPS="audio bumblebee cdrom cdrw clamav console entropy games \
@@ -59,6 +60,13 @@ sabayon_setup_autologin() {
         sed -i "/^#.*autologin=/ s/^#//" $LXDM_FILE
     fi
 
+    # SDDM
+    if [ -f "$SDDM_FILE" ]; then
+        sed -i "s/Relogin=.*/Relogin=true/" $SDDM_FILE
+        sed -i "s/^User=.*/User=${LIVE_USER}/" $SDDM_FILE
+        sed -i "s/^Session=.*/Session=default/" $SDDM_FILE
+    fi
+
     # LightDM
     if [ -f "$LIGHTDM_FILE" ]; then
         sed -i "s/autologin-user=.*/autologin-user=${LIVE_USER}/" $LIGHTDM_FILE
@@ -95,6 +103,14 @@ sabayon_disable_autologin() {
     if [ -f "$LIGHTDM_FILE" ]; then
         sed -i "s/^autologin-user=.*/#autologin-user=/" $LIGHTDM_FILE
     fi
+
+    # SDDM
+    if [ -f "$SDDM_FILE" ]; then
+        sed -i "s/Relogin=.*/Relogin=false/" $SDDM_FILE
+        sed -i "s/^Session=.*/Session=/" $SDDM_FILE
+        sed -i "s/^User=.*/User=/" $SDDM_FILE
+    fi
+
 }
 
 sabayon_setup_home_mount() {
@@ -249,8 +265,8 @@ sabayon_setup_text_installer() {
 }
 
 sabayon_setup_text_installer_motd() {
-    echo "Welcome to Sabayon Linux Text installation." >> /etc/motd
-    echo "to run the installation type: installer <and PRESS ENTER>" >> /etc/motd
+    echo "Welcome to Sabayon Linux installation. Text installation unfortunately it's not available:" >> /etc/motd
+    echo "to run the installation start the X server with vesa and run 'installer'" >> /etc/motd
 }
 
 sabayon_is_text_install() {
