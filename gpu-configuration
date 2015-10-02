@@ -690,7 +690,7 @@ for videocard in videocards:
 
         if company_id == "10de": # NVIDIA
             if noproprietary:
-                steps.append((set_xorg_device, "nv",
+                steps.append((set_xorg_device, "nouveau",
                               cardnumber, total_cards, bus_id,))
             else:
                 generate_nvidia_steps(
