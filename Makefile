@@ -53,4 +53,5 @@ install:
 	install -m 0755 sabayonlive $(DESTDIR)/$(SYSV_INITDIR)/
 	install -m 0755 installer-gui $(DESTDIR)/$(SYSV_INITDIR)/
 	install -m 0755 installer-text $(DESTDIR)/$(SYSV_INITDIR)/
+	install -m 0755 installer-x $(DESTDIR)/$(UBINDIR)/
 	install -m 0755 cdeject $(DESTDIR)/$(SYSV_INITDIR)/

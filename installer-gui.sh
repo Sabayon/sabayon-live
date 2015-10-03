@@ -4,6 +4,6 @@
 
 if sabayon_is_gui_install; then
 	#sabayon_setup_autologin
-	/usr/bin/xinit /usr/bin/calamares-pkexec -- -nolisten tcp -br +bs -dpi 96 vt$XDG_VTNR
+	/usr/bin/installer-x
 	#sabayon_setup_gui_installer
 fi
