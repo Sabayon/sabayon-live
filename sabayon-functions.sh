@@ -264,6 +264,13 @@ sabayon_setup_text_installer() {
     sabayon_setup_text_installer_motd
 }
 
+sabayon_setup_vbox() {
+   if ! sabayon_is_vbox; then
+	systemctl disable virtualbox-guest-additions
+	systemctl stop virtualbox-guest-additions
+   fi
+}
+
 sabayon_setup_text_installer_motd() {
     echo "Welcome to Sabayon Linux installation. Text installation unfortunately it's not available:" >> /etc/motd
     echo "to run the installation start installer-text.sh" >> /etc/motd
@@ -298,6 +305,17 @@ sabayon_is_mce() {
         return 0
     else
         return 1
+    fi
+}
+
+sabayon_is_vbox() {
+    local isvbox=$(dmidecode | grep -i VirtualBox)
+    if [[ $? != 0 ]]; then
+	return 0
+    elif [[ $isvbox ]]; then
+	return 1
+    else
+	return 0
     fi
 }
 

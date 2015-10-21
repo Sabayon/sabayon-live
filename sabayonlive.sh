@@ -141,7 +141,7 @@ main() {
         echo "Skipping Live system configuration"
         return 0
     fi
-
+  
     setup_desktop
     setup_password
     setup_keymap
@@ -150,6 +150,7 @@ main() {
     # /etc/profile.env variables
     setup_locale
     sabayon_setup_autologin
+    sabayon_setup_vbox
     sabayon_setup_vt_autologin
     sabayon_setup_oem_livecd
 }
