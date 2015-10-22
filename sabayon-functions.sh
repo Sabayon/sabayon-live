@@ -309,13 +309,13 @@ sabayon_is_mce() {
 }
 
 sabayon_is_vbox() {
-    local isvbox=$(dmidecode | grep -i VirtualBox)
+    local _isvbox=$(dmidecode | grep -i VirtualBox)
     if [[ $? != 0 ]]; then
 	return 0
-    elif [[ $isvbox ]]; then
-	return 1
-    else
+    elif [ -n "${_isvbox}" ]; then
 	return 0
+    else
+	return 1
     fi
 }
 
