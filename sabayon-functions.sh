@@ -151,7 +151,9 @@ sabayon_setup_live_user() {
         # then setup live user, that is missing
         useradd -d "/home/${live_user}" -g root -G ${live_groups} -c "Sabayon" \
             -m -N -p "" -s /bin/bash ${live_uid} "${live_user}"
-        return 0
+	# setting sudoers file
+	[ -e /etc/sudoers ] && grep -q -F ${live_user} /etc/sudoers || echo "${live_user} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+	return 0
     fi
     return 1
 }
