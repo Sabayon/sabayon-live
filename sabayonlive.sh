@@ -81,8 +81,8 @@ setup_keymap() {
 
     if [ -n "${keymap_toset}" ]; then
         aggregated_keymap="${keymap_toset}${keymap_toset_model}"
-	/usr/bin/setxkbmap "${aggregated_keymap}" &> /dev/null
-	/sbin/keyboard-setup-2 "${aggregated_keymap}" all &> /dev/null
+        echo "${aggregated_keymap}" > "/home/${LIVE_USER}/.Xkbmap"
+        /sbin/keyboard-setup-2 "${aggregated_keymap}" all &> /dev/null
         if [ "${?}" = "0" ]; then
             openrc_running && /etc/init.d/keymaps restart --nodeps
             # systemd not needed here, this script runs before vconsole-setup
@@ -142,7 +142,7 @@ main() {
         echo "Skipping Live system configuration"
         return 0
     fi
-  
+
     setup_desktop
     setup_password
     setup_keymap
