@@ -276,8 +276,8 @@ sabayon_setup_vbox() {
 }
 
 sabayon_setup_text_installer_motd() {
-    echo "Welcome to Sabayon Linux Text installation." >> /etc/motd
-    echo "to run the installation type: anaconda-installer <and PRESS ENTER>" >> /etc/motd
+    echo "Welcome to Sabayon Linux installation. Text installation unfortunately it's not available:" >> /etc/motd
+    echo "to run the installation start installer-text.sh" >> /etc/motd
 }
 
 sabayon_is_text_install() {
