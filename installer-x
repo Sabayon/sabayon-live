@@ -1,3 +1,0 @@
-#!/bin/bash
-
-/usr/bin/xinit /usr/bin/installer -- -nolisten tcp -br +bs -dpi 96 vt$XDG_VTNR

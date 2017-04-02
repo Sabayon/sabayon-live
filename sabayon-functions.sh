@@ -232,7 +232,7 @@ sabayon_setup_gui_installer() {
     if [ ! -d "${flux_dir}" ]; then
         mkdir "${flux_dir}" && chown "${LIVE_USER}" "${flux_dir}"
     fi
-    sed -i "/installer --fullscreen/ s/^# //" "${flux_startup_file}"
+    sed -i "/anaconda-installer --fullscreen/ s/^# //" "${flux_startup_file}"
 
     sabayon_setup_desktop_session "${LIVE_USER}" "fluxbox"
 
