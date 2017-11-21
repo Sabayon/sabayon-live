@@ -62,7 +62,6 @@ sabayon_setup_autologin() {
 
     # SDDM
     if [ -f "$SDDM_FILE" ]; then
-        sed -i "s/Relogin=.*/Relogin=true/" $SDDM_FILE
         sed -i "s/^User=.*/User=${LIVE_USER}/" $SDDM_FILE
         sed -i "s/^Session=.*/Session=default/" $SDDM_FILE
     fi
