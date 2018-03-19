@@ -2,7 +2,6 @@
 
 GDM_FILE="/usr/share/gdm/defaults.conf"
 CUSTOM_GDM_FILE="/etc/gdm/custom.conf"
-KDM_FILE="/usr/share/config/kdm/kdmrc"
 LXDM_FILE="/etc/lxdm/lxdm.conf"
 LIGHTDM_FILE="/etc/lightdm/lightdm.conf"
 SDDM_FILE="/etc/sddm.conf"
@@ -31,27 +30,6 @@ sabayon_setup_autologin() {
         # change other entries there
         sed -i "s/^TimedLogin=.*/TimedLogin=${LIVE_USER}/" "${CUSTOM_GDM_FILE}"
         sed -i "s/^AutomaticLogin=.*/AutomaticLogin=${LIVE_USER}/" "${CUSTOM_GDM_FILE}"
-    fi
-
-    # KDM - KDE
-    if [ -f "$KDM_FILE" ]; then
-        sed -i "s/AutoLoginEnable=.*/AutoLoginEnable=true/" $KDM_FILE
-        sed -i "s/AutoLoginUser=.*/AutoLoginUser=${LIVE_USER}/" $KDM_FILE
-        sed -i "s/AutoLoginDelay=.*/AutoLoginDelay=0/" $KDM_FILE
-        sed -i "s/AutoLoginAgain=.*/AutoLoginAgain=true/" $KDM_FILE
-
-        sed -i "s/AllowRootLogin=.*/AllowRootLogin=true/" $KDM_FILE
-        sed -i "s/AllowNullPasswd=.*/AllowNullPasswd=true/" $KDM_FILE
-        sed -i "s/AllowShutdown=.*/AllowShutdown=All/" $KDM_FILE
-
-        sed -i "/^#.*AutoLoginEnable=/ s/^#//" $KDM_FILE
-        sed -i "/^#.*AutoLoginUser=/ s/^#//" $KDM_FILE
-        sed -i "/^#.*AutoLoginDelay=/ s/^#//" $KDM_FILE
-        sed -i "/^#.*AutoLoginAgain=/ s/^#//" $KDM_FILE
-
-        sed -i "/^#AllowRootLogin=/ s/^#//" $KDM_FILE
-        sed -i "/^#AllowNullPasswd=/ s/^#//" $KDM_FILE
-        sed -i "/^#AllowShutdown=/ s/^#//" $KDM_FILE
     fi
 
     # LXDM
@@ -85,12 +63,6 @@ sabayon_disable_autologin() {
         sed -i "/^TimedLogin=.*/d" ${CUSTOM_GDM_FILE}
         sed -i "/^TimedLoginDelay=.*/d" ${CUSTOM_GDM_FILE}
         sed -i "s/^AutomaticLoginEnable=.*/AutomaticLoginEnable=false/" ${GDM_FILE}
-    fi
-
-    # KDM - KDE
-    KDM_FILE="/usr/share/config/kdm/kdmrc"
-    if [ -f "$KDM_FILE" ]; then
-        sed -i "s/AutoLoginEnable=.*/AutoLoginEnable=false/" $KDM_FILE
     fi
 
     # LXDM
@@ -150,9 +122,9 @@ sabayon_setup_live_user() {
         # then setup live user, that is missing
         useradd -d "/home/${live_user}" -g root -G ${live_groups} -c "Sabayon" \
             -m -N -p "" -s /bin/bash ${live_uid} "${live_user}"
-	# setting sudoers file
-	[ -e /etc/sudoers ] && grep -q -F ${live_user} /etc/sudoers || echo "${live_user} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-	return 0
+        # setting sudoers file
+        [ -e /etc/sudoers ] && grep -q -F ${live_user} /etc/sudoers || echo "${live_user} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+        return 0
     fi
     return 1
 }
@@ -267,10 +239,10 @@ sabayon_setup_text_installer() {
 
 sabayon_setup_vbox() {
    if ! sabayon_is_vbox; then
-	systemctl disable virtualbox-guest-additions
-	systemctl stop virtualbox-guest-additions
-	# KILL IT WITH FIRE BEFORE IT LAYS EGGS
-	rm -rf /etc/xdg/autostart/vboxclient.desktop
+       systemctl disable virtualbox-guest-additions
+       systemctl stop virtualbox-guest-additions
+       # KILL IT WITH FIRE BEFORE IT LAYS EGGS
+       rm -rf /etc/xdg/autostart/vboxclient.desktop
    fi
 }
 
@@ -314,11 +286,11 @@ sabayon_is_mce() {
 sabayon_is_vbox() {
     local _isvbox=$(dmidecode | grep -i VirtualBox)
     if [[ $? != 0 ]]; then
-	return 0
+        return 0
     elif [ -n "${_isvbox}" ]; then
-	return 0
+        return 0
     else
-	return 1
+        return 1
     fi
 }
 
