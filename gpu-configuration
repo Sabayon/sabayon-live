@@ -108,12 +108,6 @@ current_arch = os.uname()[4]
 nomodeset = False
 noefi = False
 
-fglrx_supported = sorted(getoutput(
-        "modinfo fglrx | grep alias | grep pci | "
-        "cut -d':' -f 3 | cut -d'*' -f 1 | "
-        "sed 's/.*1002d//' | sed 's/^0000//' | sed 's/sv$//'"
-        ).lower().split())
-
 nvidia_71xx_supported = [
     '0020', '0028', '0029', '002c', '002d', '00a0', '0100', '0101',
     '0103', '0150', '0151', '0152', '0153']
@@ -213,7 +207,6 @@ def remove_proprietary_opengl(bumblebee):
     if not dryrun:
         if not bumblebee:
             os.system("""
-            mount -t tmpfs none /usr/lib/opengl/ati &> /dev/null
             mount -t tmpfs none /usr/lib/opengl/nvidia &> /dev/null
             sed -i '/LIBGL_DRIVERS_PATH/ s/.*//' /etc/profile.env
             """)
@@ -232,57 +225,6 @@ def get_kernel_version():
         return None
 
 
-def setup_radeon_kms():
-    # Starting from kernel 3.6, we have CONFIG_DRM_RADEON_KMS=y
-    kver = get_kernel_version()
-    if kver is None:
-        kver = 360  # assume new kernel
-    if not dryrun and kver < 360:
-        os.system("""
-        modprobe -r radeon &> /dev/null
-        modprobe radeon modeset=1 && touch /tmp/.radeon.kms
-        """)
-    else:
-        print("I was about to modprobe radeon modeset=1")
-
-
-def generate_fglrx_steps(videocard, cardnumber, total_cards, bus_id):
-    print("AMD!")
-    print("total supported AMD cards: %s" % (len(fglrx_supported),))
-    print("supported list:", fglrx_supported)
-    supported = card_id in fglrx_supported
-    if supported:
-        print("fglrx driver supports this card")
-    # check if nomodeset is enabled for >=3.6.0 kernel
-    kver = get_kernel_version()
-    if kver is None:
-        kver = 360  # assume new kernel
-    if not nomodeset and kver >= 360:
-        print("however, nomodeset is not set, though KMS is active,"
-              " defaulting to OSS driver")
-        supported = False
-
-    if supported:
-        if noproprietary:
-            steps.append((drop_kernel_mod, "fglrx",))
-            steps.append((setup_radeon_kms,))
-        else:
-            steps.append((fix_possible_opengl_misconfiguration,
-                          "ati"))
-            steps.append((copy_ati_settings_on_desktop,))
-            steps.append((opengl_activate, "ati"))
-            steps.append((set_xorg_device, "fglrx",
-                          cardnumber, total_cards, bus_id,))
-    else:
-        # video card not supported by fglrx
-        print("using OSS 'ati' drivers")
-        generate_generic_steps()
-        # This works for Mach64, Rage128
-        # Radeon and in future RadeonHD driver
-        steps.append((drop_kernel_mod, "fglrx",))
-        steps.append((setup_radeon_kms,))
-
-
 def check_if_driver_is_available(xdriver):
     drv_path = "/usr/lib/xorg/modules/drivers/" + xdriver + "_drv.so"
     if os.path.isfile(drv_path):
@@ -294,31 +236,13 @@ def check_if_driver_is_available(xdriver):
 
 def check_if_proprietary_driver_system_is_healthy(kernelmod):
     rc = subprocess.call(["modprobe", kernelmod])
-    if rc == 0:
-        if kernelmod == "nvidia":
-            if os.path.exists("/usr/lib/opengl/nvidia/lib"):
-                print("check_if_proprietary_driver_system_is_healthy:"
-                      " nvidia healthy")
-                return True
+    if rc == 0 and kernelmod == "nvidia":
+        if os.path.exists("/usr/lib/opengl/nvidia/lib"):
             print("check_if_proprietary_driver_system_is_healthy:"
-                  " nvidia NOT healthy")
-            return False
-        elif kernelmod == "fglrx":
-            kver = get_kernel_version()
-            if kver is None:
-                kver = 360  # assume new kernel
-            if not nomodeset and kver >= 360:
-                print("check_if_proprietary_driver_system_is_healthy:"
-                      " fglrx (ati) NOT healthy, 'nomodeset' boot argument"
-                      " is mising")
-                return False
-            if os.path.exists("/usr/lib/opengl/ati/lib"):
-                print("check_if_proprietary_driver_system_is_healthy:"
-                      " fglrx (ati) healthy")
-                return True
-            print("check_if_proprietary_driver_system_is_healthy:"
-                  " fglrx (ati) NOT healthy")
-            return False
+                  " nvidia healthy")
+            return True
+        print("check_if_proprietary_driver_system_is_healthy:"
+              " nvidia NOT healthy")
     return False
 
 
@@ -387,7 +311,7 @@ def get_vesa_driver():
 
 
 def set_xorg_device(xdriver, cardnum, total_cards, bus_id):
-    if (xdriver not in ("nvidia", "fglrx",)) and \
+    if (xdriver not in ("nvidia")) and \
             (not check_if_driver_is_available(xdriver)):
         xdriver = get_vesa_driver()  # fallback to vesa
     bus_id_mark = "#"
@@ -446,8 +370,8 @@ def fix_possible_opengl_misconfiguration(profile):
     # get current subsystem
     current = opengl_show()
     if not dryrun:
-        if (profile in ("ati", "nvidia", "xorg-x11")) and (profile != current):
-            if profile == "ati" or profile == "nvidia":
+        if (profile in ("nvidia", "xorg-x11")) and (profile != current):
+            if profile == "nvidia":
                 subprocess.call(["umount", "/usr/lib/opengl/" + profile])
                 subprocess.call(["umount", "/usr/lib/opengl/" + profile])
                 opengl_activate(profile)
@@ -460,7 +384,6 @@ def fix_possible_opengl_misconfiguration(profile):
 def copy_nvidia_settings_on_desktop():
     homes = []
     if os.path.isfile(nvidia_settings):
-        _homes = os.listdir("/home")
         homes += [x for x in os.listdir("/home")
                   if os.path.isdir("/home/" + x + "/Desktop")]
 
@@ -484,35 +407,6 @@ def copy_nvidia_settings_on_desktop():
 
         except Exception:
             pass
-
-
-def copy_ati_settings_on_desktop():
-    desktop_files = getoutput(
-        'equo query files ati-drivers --quiet | grep ".desktop"').split("\n")
-    desktop_files = [x for x in desktop_files if os.path.isfile(x)]
-    print("copy_ati_settings_on_desktop: found files: "+str(desktop_files))
-
-    for ati_settings in desktop_files:
-        homes = os.listdir("/home")
-        homes = [x for x in homes if os.path.isdir("/home/" + x + "/Desktop")]
-        for home in homes:
-            try:
-                full_home = os.path.join("/home", home)
-                st = os.stat(full_home)
-                dest_path = "/home/" + home + "/Desktop/" + \
-                    os.path.basename(ati_settings)
-                shutil.copy2(ati_settings, dest_path)
-                os.chmod(dest_path, 0o755)
-                os.chown(dest_path, st.st_uid, st.st_gid)
-
-                if os.path.isdir("/etc/skel/Desktop"):
-                    dest_path = os.path.join(
-                        "/etc/skel/Desktop",
-                        os.path.basename(ati_settings))
-                    shutil.copy2(ati_settings, dest_path)
-                    os.chmod(dest_path, 0o755)
-            except Exception:
-                pass
 
 
 def setup_nvidia_drivers(card_id):
@@ -696,18 +590,7 @@ for videocard in videocards:
 
     if forced_xdriver:
         print("You have chosen to force the X driver: " + forced_xdriver)
-        if forced_xdriver == "fglrx":
-            if check_if_proprietary_driver_system_is_healthy("fglrx") \
-                    or noproprietary:
-                steps.append((opengl_activate, "xorg-x11"))
-                forced_xdriver = "ati"
-                steps.append((drop_kernel_mod, "fglrx",))
-            else:
-                steps.append((fix_possible_opengl_misconfiguration, "ati"))
-                steps.append((copy_ati_settings_on_desktop,))
-                steps.append((opengl_activate, "ati"))
-
-        elif forced_xdriver == "nvidia" and (not noproprietary):
+        if forced_xdriver == "nvidia" and (not noproprietary):
             generate_nvidia_steps(videocard, cardnumber, total_cards, bus_id)
         elif forced_xdriver == "vesa":
             forced_monitor_modes = True
@@ -730,11 +613,6 @@ for videocard in videocards:
                 generate_nvidia_steps(
                     videocard, cardnumber, total_cards, bus_id)
                 print("NVIDIA!")
-            write_config = True
-
-        elif company_id == "1002":
-            generate_fglrx_steps(
-                videocard, cardnumber, total_cards, bus_id)
             write_config = True
 
         else:
