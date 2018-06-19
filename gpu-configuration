@@ -114,40 +114,47 @@ fglrx_supported = sorted(getoutput(
         "sed 's/.*1002d//' | sed 's/^0000//' | sed 's/sv$//'"
         ).lower().split())
 
-nvidia_71xx_supported = ['0020', '0028', '0029', '002c', '002d', '00a0',
-    '0100', '0101', '0103', '0150', '0151', '0152', '0153']
-nvidia_96xx_supported = ['0110', '0111', '0112', '0113', '0170', '0171',
-    '0172', '0173', '0174', '0175', '0176', '0177', '0178', '0179', '017a',
-    '017c', '017d', '0181', '0182', '0183', '0185', '0188', '018a', '018b',
-    '018c', '01a0', '01f0', '0200', '0201', '0202', '0203', '0250', '0251',
-    '0253', '0258', '0259', '025b', '0280', '0281', '0282', '0286', '0288',
-    '0289', '028c']
-nvidia_173xx_supported = ['00fa', '00fb', '00fc', '00fd', '00fe', '0301',
-    '0302', '0308', '0309', '0311', '0312', '0314', '031a', '031b', '031c',
-    '0320', '0321', '0322', '0323', '0324', '0325', '0326', '0327', '0328',
-    '032a', '032b', '032c', '032d', '0330', '0331', '0332', '0333', '0334',
-    '0338', '033f', '0341', '0342', '0343', '0344', '0347', '0348', '034c',
-    '034e']
+nvidia_71xx_supported = [
+    '0020', '0028', '0029', '002c', '002d', '00a0', '0100', '0101',
+    '0103', '0150', '0151', '0152', '0153']
+nvidia_96xx_supported = [
+    '0110', '0111', '0112', '0113', '0170', '0171', '0172', '0173',
+    '0174', '0175', '0176', '0177', '0178', '0179', '017a', '017c',
+    '017d', '0181', '0182', '0183', '0185', '0188', '018a', '018b',
+    '018c', '01a0', '01f0', '0200', '0201', '0202', '0203', '0250',
+    '0251', '0253', '0258', '0259', '025b', '0280', '0281', '0282',
+    '0286', '0288', '0289', '028c']
+nvidia_173xx_supported = [
+    '00fa', '00fb', '00fc', '00fd', '00fe', '0301', '0302', '0308',
+    '0309', '0311', '0312', '0314', '031a', '031b', '031c', '0320',
+    '0321', '0322', '0323', '0324', '0325', '0326', '0327', '0328',
+    '032a', '032b', '032c', '032d', '0330', '0331', '0332', '0333',
+    '0334', '0338', '033f', '0341', '0342', '0343', '0344', '0347',
+    '0348', '034c', '034e']
+
 # Taken from here:
 # http://www.nvidia.com/object/IO_32667.html
-nvidia_304xx_supported = ['0040', '0041', '0042', '0043', '0044', '0045',
-    '0046', '0047', '0048', '004e', '0090', '0091', '0092', '0093', '0095',
-    '0098', '0099', '009d', '00c0', '00c1', '00c2', '00c3', '00c8', '00c9',
-    '00cc', '00cd', '00ce', '00f1', '00f2', '00f3', '00f4', '00f5', '00f6',
-    '00f8', '00f9', '0140', '0141', '0142', '0143', '0144', '0145', '0146',
-    '0147', '0148', '0149', '014a', '014c', '014d', '014e', '014f', '0160',
-    '0161', '0162', '0163', '0164', '0165', '0166', '0167', '0168', '0169',
-    '016a', '01d0', '01d1', '01d2', '01d3', '01d6', '01d7', '01d8', '01da',
-    '01db', '01dc', '01dd', '01de', '01df', '0211', '0212', '0215', '0218',
-    '0221', '0222', '0240', '0241', '0242', '0244', '0245', '0247', '0290',
-    '0291', '0292', '0293', '0294', '0295', '0297', '0298', '0299', '029a',
-    '029b', '029c', '029d', '029e', '029f', '02e0', '02e1', '02e2', '02e3',
-    '02e4', '038b', '0390', '0391', '0392', '0393', '0394', '0395', '0397',
-    '0398', '0399', '039c', '039e', '03d0', '03d1', '03d2', '03d5', '03d6',
-    '0531', '0533', '053a', '053b', '053e', '07e0', '07e1', '07e2', '07e3',
-    '07e5']
-savage_supported = ['8a20', '8a21', '8a22', '9102', '8c10', '8c11', '8c12',
-    '8c13', '8c22', '8c24', '8c26', '8c2a', '8c2b', '8c2c', '8c2d', '8c2e',
+nvidia_304xx_supported = [
+    '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047',
+    '0048', '004e', '0090', '0091', '0092', '0093', '0095', '0098',
+    '0099', '009d', '00c0', '00c1', '00c2', '00c3', '00c8', '00c9',
+    '00cc', '00cd', '00ce', '00f1', '00f2', '00f3', '00f4', '00f5',
+    '00f6', '00f8', '00f9', '0140', '0141', '0142', '0143', '0144',
+    '0145', '0146', '0147', '0148', '0149', '014a', '014c', '014d',
+    '014e', '014f', '0160', '0161', '0162', '0163', '0164', '0165',
+    '0166', '0167', '0168', '0169', '016a', '01d0', '01d1', '01d2',
+    '01d3', '01d6', '01d7', '01d8', '01da', '01db', '01dc', '01dd',
+    '01de', '01df', '0211', '0212', '0215', '0218', '0221', '0222',
+    '0240', '0241', '0242', '0244', '0245', '0247', '0290', '0291',
+    '0292', '0293', '0294', '0295', '0297', '0298', '0299', '029a',
+    '029b', '029c', '029d', '029e', '029f', '02e0', '02e1', '02e2',
+    '02e3', '02e4', '038b', '0390', '0391', '0392', '0393', '0394',
+    '0395', '0397', '0398', '0399', '039c', '039e', '03d0', '03d1',
+    '03d2', '03d5', '03d6', '0531', '0533', '053a', '053b', '053e',
+    '07e0', '07e1', '07e2', '07e3', '07e5']
+savage_supported = [
+    '8a20', '8a21', '8a22', '9102', '8c10', '8c11', '8c12', '8c13',
+    '8c22', '8c24', '8c26', '8c2a', '8c2b', '8c2c', '8c2d', '8c2e',
     '8c2f', '8a25', '8a26', '8d01', '8d02', '8d03', '8d04']
 unichrome_supported = ['3108', '3118', '3157', '3343', '3344', '7205']
 
@@ -174,7 +181,7 @@ if not lspci_output:
     lspci_output = getoutput(lspci+' -mm -n')
 
 # parse cmdline
-with open("/proc/cmdline","r") as f:
+with open("/proc/cmdline", "r") as f:
     cmdline = f.readline().split()
 for cmd in cmdline:
     if cmd == "noproprietary":
@@ -191,13 +198,16 @@ for cmd in cmdline:
         noefi = True
     elif cmd.startswith("xdriver=") and (len(cmd.split("=")) == 2):
         if not forced_xdriver:
-            forced_xdriver = cmd.split("=")[1] # --forced-xdriver= owns
+            forced_xdriver = cmd.split("=")[1]  # --forced-xdriver= owns
+
 
 def openrc_running():
     return os.path.isfile("/run/openrc/softlevel")
 
+
 def systemd_running():
     return os.path.isdir("/run/systemd/system")
+
 
 def remove_proprietary_opengl(bumblebee):
     if not dryrun:
@@ -213,6 +223,7 @@ def remove_proprietary_opengl(bumblebee):
     else:
         print("I was about to remove proprietary OpenGL libraries")
 
+
 def get_kernel_version():
     try:
         return int(os.uname()[2].replace(".", "")[:3])
@@ -220,11 +231,12 @@ def get_kernel_version():
         print("get_kernel_version: ouch: %s" % (err,))
         return None
 
+
 def setup_radeon_kms():
     # Starting from kernel 3.6, we have CONFIG_DRM_RADEON_KMS=y
     kver = get_kernel_version()
     if kver is None:
-        kver = 360 # assume new kernel
+        kver = 360  # assume new kernel
     if not dryrun and kver < 360:
         os.system("""
         modprobe -r radeon &> /dev/null
@@ -232,6 +244,7 @@ def setup_radeon_kms():
         """)
     else:
         print("I was about to modprobe radeon modeset=1")
+
 
 def generate_fglrx_steps(videocard, cardnumber, total_cards, bus_id):
     print("AMD!")
@@ -243,7 +256,7 @@ def generate_fglrx_steps(videocard, cardnumber, total_cards, bus_id):
     # check if nomodeset is enabled for >=3.6.0 kernel
     kver = get_kernel_version()
     if kver is None:
-        kver = 360 # assume new kernel
+        kver = 360  # assume new kernel
     if not nomodeset and kver >= 360:
         print("however, nomodeset is not set, though KMS is active,"
               " defaulting to OSS driver")
@@ -269,6 +282,7 @@ def generate_fglrx_steps(videocard, cardnumber, total_cards, bus_id):
         steps.append((drop_kernel_mod, "fglrx",))
         steps.append((setup_radeon_kms,))
 
+
 def check_if_driver_is_available(xdriver):
     drv_path = "/usr/lib/xorg/modules/drivers/" + xdriver + "_drv.so"
     if os.path.isfile(drv_path):
@@ -276,6 +290,7 @@ def check_if_driver_is_available(xdriver):
         return True
     print("check_if_driver_is_available for " + xdriver + ": not available")
     return False
+
 
 def check_if_proprietary_driver_system_is_healthy(kernelmod):
     rc = subprocess.call(["modprobe", kernelmod])
@@ -291,7 +306,7 @@ def check_if_proprietary_driver_system_is_healthy(kernelmod):
         elif kernelmod == "fglrx":
             kver = get_kernel_version()
             if kver is None:
-                kver = 360 # assume new kernel
+                kver = 360  # assume new kernel
             if not nomodeset and kver >= 360:
                 print("check_if_proprietary_driver_system_is_healthy:"
                       " fglrx (ati) NOT healthy, 'nomodeset' boot argument"
@@ -305,6 +320,7 @@ def check_if_proprietary_driver_system_is_healthy(kernelmod):
                   " fglrx (ati) NOT healthy")
             return False
     return False
+
 
 def deploy_nvidia_xxxxxx_drivers(ver):
     if dryrun:
@@ -339,7 +355,10 @@ def deploy_nvidia_xxxxxx_drivers(ver):
     # try to check driver status now
     return check_if_proprietary_driver_system_is_healthy("nvidia")
 
+
 efivars_loaded = False
+
+
 def is_efi():
     """
     Return whether the system boots from EFI
@@ -355,6 +374,7 @@ def is_efi():
 
     return os.path.exists("/sys/firmware/efi")
 
+
 def get_vesa_driver():
     """
     Return either "vesa" or "fbdev" as the fallback
@@ -365,10 +385,11 @@ def get_vesa_driver():
         return "fbdev"
     return "vesa"
 
+
 def set_xorg_device(xdriver, cardnum, total_cards, bus_id):
     if (xdriver not in ("nvidia", "fglrx",)) and \
             (not check_if_driver_is_available(xdriver)):
-        xdriver = get_vesa_driver() # fallback to vesa
+        xdriver = get_vesa_driver()  # fallback to vesa
     bus_id_mark = "#"
     if total_cards > 1:
         bus_id_mark = ""
@@ -404,6 +425,7 @@ EndSection
     screen_layout_sections.append('Screen %s    "Screen %s"' % (
             cardnum, cardnum,))
 
+
 def opengl_activate(profile, force=False):
     if not dryrun:
         if not force:
@@ -415,29 +437,32 @@ def opengl_activate(profile, force=False):
     else:
         print("I was about to set opengl subsystem to: " + profile)
 
+
 def opengl_show():
     return getoutput("eselect opengl show").split("\n")[0].strip()
+
 
 def fix_possible_opengl_misconfiguration(profile):
     # get current subsystem
     current = opengl_show()
     if not dryrun:
-        if (profile in ("ati","nvidia","xorg-x11")) and (profile != current):
+        if (profile in ("ati", "nvidia", "xorg-x11")) and (profile != current):
             if profile == "ati" or profile == "nvidia":
                 subprocess.call(["umount", "/usr/lib/opengl/" + profile])
                 subprocess.call(["umount", "/usr/lib/opengl/" + profile])
                 opengl_activate(profile)
     else:
-        print("I was about to fix OpenGL subsystem to: " + \
-                  profile + " while the current implementation is: " + \
-                  current)
+        print("I was about to fix OpenGL subsystem to: " +
+              profile + " while the current implementation is: " +
+              current)
+
 
 def copy_nvidia_settings_on_desktop():
     homes = []
     if os.path.isfile(nvidia_settings):
         _homes = os.listdir("/home")
-        homes += [x for x in os.listdir("/home") \
-                      if os.path.isdir("/home/" + x + "/Desktop")]
+        homes += [x for x in os.listdir("/home")
+                  if os.path.isdir("/home/" + x + "/Desktop")]
 
     for home in homes:
         try:
@@ -459,6 +484,7 @@ def copy_nvidia_settings_on_desktop():
 
         except Exception:
             pass
+
 
 def copy_ati_settings_on_desktop():
     desktop_files = getoutput(
@@ -487,6 +513,7 @@ def copy_ati_settings_on_desktop():
                     os.chmod(dest_path, 0o755)
             except Exception:
                 pass
+
 
 def setup_nvidia_drivers(card_id):
     drv_string = ''
@@ -523,13 +550,14 @@ def setup_nvidia_drivers(card_id):
         if done_legacy:
             try:
                 os.makedirs("/lib/nvidia/legacy")
-            except OSError  as err:
+            except OSError as err:
                 if err.errno != errno.EEXIST:
                     raise
             with open("/lib/nvidia/legacy/running", "w") as f:
                 f.write("%s" % (drv_string,))
 
     return done_legacy, healthy
+
 
 def generate_nvidia_bumblebee_steps(v3dcard, company_id, card_id):
     done_legacy, healthy = setup_nvidia_drivers(card_id)
@@ -553,6 +581,7 @@ def generate_nvidia_bumblebee_steps(v3dcard, company_id, card_id):
         os.system("/etc/init.d/bumblebee start")
     elif systemd_running():
         os.system("/usr/bin/systemctl start bumblebeed")
+
 
 def generate_nvidia_steps(videocard, cardnumber, total_cards, bus_id):
     comp_id, card_id = extract_pci_ids(videocard)
@@ -580,16 +609,19 @@ def generate_nvidia_steps(videocard, cardnumber, total_cards, bus_id):
         print("NVIDIA drivers couldn't be loaded, switchting to nv driver")
         steps.append((opengl_activate, "xorg-x11"))
 
+
 def generate_generic_steps():
     steps.append((remove_proprietary_opengl, bb_enabled))
     steps.append((opengl_activate, "xorg-x11",))
 
+
 def drop_kernel_mod(kmod):
     return subprocess.call(["modprobe", "-r", kmod])
 
+
 def extract_pci_ids(videocard_str):
-    videocard_split = [x.strip() for x in videocard_str.strip().split('"') \
-                           if x.strip()]
+    videocard_split = [x.strip() for x in videocard_str.strip().split('"')
+                       if x.strip()]
     try:
         card_id = videocard_split[3].split()[-1].lower().strip("[]")
     except IndexError:
@@ -602,6 +634,7 @@ def extract_pci_ids(videocard_str):
 
     return company_id, card_id
 
+
 def extract_vga_cards(lspci_list):
     cards = []
     for item in lspci_list:
@@ -612,6 +645,7 @@ def extract_vga_cards(lspci_list):
         except IndexError:
             continue
     return cards
+
 
 def extract_3d_cards(lspci_list):
     # bumblebee support
@@ -657,7 +691,7 @@ for videocard in videocards:
         bus_id = "PCI:%s" % (
                 videocard.split()[0].split(".", 1)[0]
             )
-    except (IndexError,ValueError,TypeError,):
+    except (IndexError, ValueError, TypeError,):
         bus_id = None
 
     if forced_xdriver:
@@ -688,7 +722,7 @@ for videocard in videocards:
         print("[%s] company_id: %s | card_id: %s" % (
                 cardnumber, company_id, card_id,))
 
-        if company_id == "10de": # NVIDIA
+        if company_id == "10de":  # NVIDIA
             if noproprietary:
                 steps.append((set_xorg_device, "nouveau",
                               cardnumber, total_cards, bus_id,))
