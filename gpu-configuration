@@ -9,18 +9,110 @@ try:
 except ImportError:
     from commands import getoutput
 import shutil
-import sys
+from sys import exit as goto, argv
 
-# Variables
-xorgfile = "/etc/X11/xorg.conf"
+
 lspci = '/usr/sbin/lspci'
 nvidia_settings = "/usr/share/applications/nvidia-settings.desktop"
 
-device_id_prefix = "SabayonVga"
-nvidia_option_prefix = "--nvidia-opt--"
-screen_layout_sections = []
-device_sections = []
-xorg_conf_structure = """
+# Taken from here:
+# http://www.nvidia.com/object/IO_32667.html
+nvidia_390xx_supported = [
+    '0083', '0106', '0177', '0180', '0190', '0192', '01c0', '0224',
+    '054d', '054e', '0554', '0557', '0562', '0565', '0568', '0590',
+    '0592', '0594', '0595', '05a2', '05b1', '05b3', '05da', '05de',
+    '05e0', '05e8', '05f4', '0600', '0606', '060f', '0625', '062f',
+    '064a', '064c', '064e', '0652', '0653', '0655', '065e', '0662',
+    '067a', '0680', '0686', '0689', '068b', '068d', '068e', '0691',
+    '0692', '0694', '06ad', '06ae', '06af', '06b0', '06c0', '06c1',
+    '06c4', '06ca', '06cd', '06d1', '06d2', '06d8', '06d9', '06da',
+    '06dc', '06dd', '06de', '06df', '0702', '0719', '0725', '0728',
+    '072b', '072e', '0732', '0753', '0754', '0763', '0771', '0772',
+    '0773', '0774', '0776', '077a', '077b', '077c', '077d', '077e',
+    '077f', '0781', '0798', '0799', '079b', '079c', '0807', '0821',
+    '0823', '082f', '0830', '0833', '0837', '083e', '0840', '0841',
+    '0842', '0846', '0853', '0854', '0855', '0856', '0857', '0858',
+    '0863', '0866', '0868', '0869', '0873', '0878', '087b', '087f',
+    '0881', '0885', '088a', '088e', '088f', '0891', '089b', '0907',
+    '0911', '0914', '091e', '0921', '0926', '092e', '092f', '0932',
+    '093a', '093c', '093f', '0941', '0945', '0952', '0953', '0954',
+    '0965', '0974', '0982', '0983', '098d', '0dac', '0dad', '0dc0',
+    '0dc4', '0dc5', '0dc6', '0dcd', '0dce', '0dd1', '0dd2', '0dd3',
+    '0dd6', '0dd8', '0dda', '0de0', '0de1', '0de2', '0de3', '0de4',
+    '0de5', '0de7', '0de8', '0de9', '0dea', '0deb', '0dec', '0ded',
+    '0dee', '0def', '0df0', '0df1', '0df2', '0df3', '0df4', '0df5',
+    '0df6', '0df7', '0df8', '0df9', '0dfa', '0dfc', '0e22', '0e23',
+    '0e24', '0e30', '0e31', '0e3a', '0e3b', '0ef3', '0f00', '0f01',
+    '0f02', '0f03', '1005', '1012', '1013', '1019', '1025', '1028',
+    '1030', '103c', '1040', '1042', '1043', '1048', '1049', '104a',
+    '104b', '104c', '1050', '1051', '1052', '1054', '1055', '1056',
+    '1057', '1058', '1059', '105a', '105b', '1067', '107c', '107d',
+    '1080', '1081', '1082', '1084', '1086', '1087', '1088', '1089',
+    '108b', '1091', '1092', '1094', '1096', '109a', '109b', '10b8',
+    '10cc', '10cf', '10dd', '10de', '10e9', '10ed', '1116', '1140',
+    '1179', '11fd', '1200', '1201', '1203', '1205', '1206', '1207',
+    '1208', '1210', '1211', '1212', '1213', '1241', '1243', '1244',
+    '1245', '1246', '1247', '1248', '1249', '124b', '124d', '1251',
+    '126d', '131d', '13fd', '144d', '1462', '14c0', '14c7', '1507',
+    '152d', '15ad', '15ed', '160d', '163d', '165d', '166d', '16cd',
+    '16dd', '170d', '174b', '176d', '178d', '179d', '17aa', '17f5',
+    '1854', '18ef', '18f9', '18fb', '18fd', '18ff', '1b0a', '1b50',
+    '1b6c', '1bab', '1d05', '20dd', '20df', '210e', '212a', '212b',
+    '212c', '2132', '2136', '218a', '21ba', '21bb', '21bc', '21fa',
+    '2200', '2202', '220a', '220e', '2210', '2212', '2213', '2214',
+    '2218', '221a', '2220', '223a', '224a', '225b', '225d', '226d',
+    '226f', '227a', '228a', '22d2', '22d9', '22fa', '232a', '2335',
+    '2337', '233a', '235a', '236a', '238a', '2aef', '2af1', '2af9',
+    '2afb', '309c', '30b1', '30b4', '30b7', '30e4', '30f3', '361b',
+    '361c', '361d', '3656', '365a', '365b', '365e', '3660', '3661',
+    '366c', '3682', '3685', '3686', '3687', '3692', '3695', '3696',
+    '369b', '369c', '369d', '369e', '36a1', '36a6', '36a7', '36a8',
+    '36a9', '36ac', '36ad', '36af', '36b0', '36b6', '3800', '3801',
+    '3802', '3803', '3804', '3806', '3808', '380d', '380e', '380f',
+    '3811', '3812', '3813', '3816', '3817', '3818', '381a', '381c',
+    '381d', '3901', '3902', '3903', '3904', '3905', '3907', '3910',
+    '3912', '3913', '3915', '3977', '3983', '5001', '5003', '5005',
+    '500d', '5014', '5017', '5019', '501a', '501f', '5025', '5027',
+    '502a', '502b', '502d', '502e', '502f', '5030', '5031', '5032',
+    '5033', '503e', '503f', '5040', '5530', '705a', '844c', '846b',
+    '8595', '85ea', '85eb', '85ec', '85ee', '85f3', '860e', '861a',
+    '861b', '8628', '8643', '864c', '8652', '8660', '8661', '90d7',
+    '90dd', '999f', 'a625', 'aa33', 'aaa2', 'aaa3', 'acb2', 'acc1',
+    'ae61', 'ae65', 'ae6a', 'ae71', 'b092', 'b590', 'c0d5', 'c0d7',
+    'c0e2', 'c0e3', 'c0e4', 'c10d', 'c652', 'c709', 'c711', 'c736',
+    'c737', 'c745', 'c750', 'fa01', 'fa02', 'fa03', 'fa05', 'fa11',
+    'fa13', 'fa18', 'fa19', 'fa21', 'fa23', 'fa2a', 'fa32', 'fa33',
+    'fa36', 'fa38', 'fa42', 'fa43', 'fa45', 'fa47', 'fa49', 'fa58',
+    'fa59', 'fa88', 'fa89'
+]
+
+
+class SabayonGpuConfigurator:
+
+    def __init__(self):
+
+        # cmdlines
+        self.options = None
+        self.dryrun = False
+        self.no_proprietary = False
+        self.nvidia_disablelegacy = False
+        self.legacy = False
+        self.livecd = False
+        self.steps = []
+        self.forced_xdriver = ''
+        self.current_arch = os.uname()[4]
+        self.nomodeset = False
+        self.noefi = False
+        self.efivars_loaded = False
+        self.xorgfile = None
+        self.device_id_prefix = "SabayonVga"
+        self.nvidia_option_prefix = "--nvidia-opt--"
+        self.screen_layout_sections = []
+        self.device_sections = []
+        self.screen_sections = []
+        self.bb_enabled = False
+
+        self.xorg_conf_structure = """
 Section "Module"
     SubSection  "extmod"
        Option    "omit xfree86-dga"
@@ -61,8 +153,7 @@ Section "Extensions"
 EndSection
 """
 
-screen_sections = []
-screen_section = """
+        self.screen_section = """
 Section "Screen"
 
     Identifier    "Screen __screen_id__"
@@ -92,233 +183,40 @@ Section "Screen"
     EndSubsection
 
 EndSection
-""" % (device_id_prefix, nvidia_option_prefix,
-       nvidia_option_prefix,)
+            """ % (self.device_id_prefix, self.nvidia_option_prefix,
+                   self.nvidia_option_prefix,)
 
-# cmdlines
-options = sys.argv[1:]
-dryrun = False
-noproprietary = False
-nvidia_disablelegacy = False
-legacy = False
-livecd = False
-steps = []
-forced_xdriver = ''
-current_arch = os.uname()[4]
-nomodeset = False
-noefi = False
+    def get_vesa_driver(self):
+        """
+        Return either "vesa" or "fbdev" as the fallback
+        vesa-like X driver.
+        """
+        if self.is_efi():
+            # vesa does not work
+            return "fbdev"
+        return "vesa"
 
-nvidia_71xx_supported = [
-    '0020', '0028', '0029', '002c', '002d', '00a0', '0100', '0101',
-    '0103', '0150', '0151', '0152', '0153']
-nvidia_96xx_supported = [
-    '0110', '0111', '0112', '0113', '0170', '0171', '0172', '0173',
-    '0174', '0175', '0176', '0177', '0178', '0179', '017a', '017c',
-    '017d', '0181', '0182', '0183', '0185', '0188', '018a', '018b',
-    '018c', '01a0', '01f0', '0200', '0201', '0202', '0203', '0250',
-    '0251', '0253', '0258', '0259', '025b', '0280', '0281', '0282',
-    '0286', '0288', '0289', '028c']
-nvidia_173xx_supported = [
-    '00fa', '00fb', '00fc', '00fd', '00fe', '0301', '0302', '0308',
-    '0309', '0311', '0312', '0314', '031a', '031b', '031c', '0320',
-    '0321', '0322', '0323', '0324', '0325', '0326', '0327', '0328',
-    '032a', '032b', '032c', '032d', '0330', '0331', '0332', '0333',
-    '0334', '0338', '033f', '0341', '0342', '0343', '0344', '0347',
-    '0348', '034c', '034e']
+    def set_xorg_device(self, xdriver, cardnum, total_cards, bus_id):
+        opt_logopath = 'Option "LogoPath" "/usr/share/backgrounds/sabayonlinux-nvidia.png"'
+        if (xdriver not in ("nvidia")) and \
+                (not self.check_if_driver_is_available(xdriver)):
+            xdriver = self.get_vesa_driver()  # fallback to vesa
+        bus_id_mark = "#"
+        if total_cards > 1:
+            bus_id_mark = ""
 
-# Taken from here:
-# http://www.nvidia.com/object/IO_32667.html
-nvidia_304xx_supported = [
-    '0040', '0041', '0042', '0043', '0044', '0045', '0046', '0047',
-    '0048', '004e', '0090', '0091', '0092', '0093', '0095', '0098',
-    '0099', '009d', '00c0', '00c1', '00c2', '00c3', '00c8', '00c9',
-    '00cc', '00cd', '00ce', '00f1', '00f2', '00f3', '00f4', '00f5',
-    '00f6', '00f8', '00f9', '0140', '0141', '0142', '0143', '0144',
-    '0145', '0146', '0147', '0148', '0149', '014a', '014c', '014d',
-    '014e', '014f', '0160', '0161', '0162', '0163', '0164', '0165',
-    '0166', '0167', '0168', '0169', '016a', '01d0', '01d1', '01d2',
-    '01d3', '01d6', '01d7', '01d8', '01da', '01db', '01dc', '01dd',
-    '01de', '01df', '0211', '0212', '0215', '0218', '0221', '0222',
-    '0240', '0241', '0242', '0244', '0245', '0247', '0290', '0291',
-    '0292', '0293', '0294', '0295', '0297', '0298', '0299', '029a',
-    '029b', '029c', '029d', '029e', '029f', '02e0', '02e1', '02e2',
-    '02e3', '02e4', '038b', '0390', '0391', '0392', '0393', '0394',
-    '0395', '0397', '0398', '0399', '039c', '039e', '03d0', '03d1',
-    '03d2', '03d5', '03d6', '0531', '0533', '053a', '053b', '053e',
-    '07e0', '07e1', '07e2', '07e3', '07e5']
-savage_supported = [
-    '8a20', '8a21', '8a22', '9102', '8c10', '8c11', '8c12', '8c13',
-    '8c22', '8c24', '8c26', '8c2a', '8c2b', '8c2c', '8c2d', '8c2e',
-    '8c2f', '8a25', '8a26', '8d01', '8d02', '8d03', '8d04']
-unichrome_supported = ['3108', '3118', '3157', '3343', '3344', '7205']
+        my_screen_section = self.screen_section.replace("__screen_id__", str(cardnum))
+        # setup Option AddARGBVisuals
+        # especially needed for legacy nvidia drivers, but works
+        # on all of them
+        if xdriver == "nvidia":
+            my_screen_section = my_screen_section.replace(self.nvidia_option_prefix, "")
 
-lspci_output = ''
-for option in options:
-    if option == "--dry-run":
-        dryrun = True
-    elif option.startswith('--with-lspci=') and len(option.split("=")) >= 2:
-        option = option.split("=")[1:]
-        option = "=".join(option)
-        if option.startswith('"'):
-            option = option[1:]
-        if option.startswith("'"):
-            option = option[1:]
-        if option.endswith("'"):
-            option = option[:len(option)-1]
-        if option.endswith('"'):
-            option = option[:len(option)-1]
-        lspci_output = option
-    elif option.startswith('--forced-xdriver=') and len(option.split("=")) == 2:
-        forced_xdriver = option.split("=")[1]
-
-if not lspci_output:
-    lspci_output = getoutput(lspci+' -mm -n')
-
-# parse cmdline
-with open("/proc/cmdline", "r") as f:
-    cmdline = f.readline().split()
-for cmd in cmdline:
-    if cmd == "noproprietary":
-        noproprietary = True
-    elif cmd == "nomodeset":
-        nomodeset = True
-    elif cmd == "nvidia=disablelegacy":
-        nvidia_disablelegacy = True
-    elif cmd == "legacy":
-        legacy = True
-    elif cmd == "cdroot":
-        livecd = True
-    elif cmd == "noefi":
-        noefi = True
-    elif cmd.startswith("xdriver=") and (len(cmd.split("=")) == 2):
-        if not forced_xdriver:
-            forced_xdriver = cmd.split("=")[1]  # --forced-xdriver= owns
-
-
-def openrc_running():
-    return os.path.isfile("/run/openrc/softlevel")
-
-
-def systemd_running():
-    return os.path.isdir("/run/systemd/system")
-
-
-def remove_proprietary_opengl(bumblebee):
-    if not dryrun:
-        if not bumblebee:
-            os.system("""
-            mount -t tmpfs none /usr/lib/opengl/nvidia &> /dev/null
-            sed -i '/LIBGL_DRIVERS_PATH/ s/.*//' /etc/profile.env
-            """)
-            fix_possible_opengl_misconfiguration('xorg-x11')
         else:
-            print("Bumblebee enabled, not deactivating proprietary drivers")
-    else:
-        print("I was about to remove proprietary OpenGL libraries")
+            my_screen_section = my_screen_section.replace(self.nvidia_option_prefix, "#")
+            opt_logopath = ''
 
-
-def get_kernel_version():
-    try:
-        return int(os.uname()[2].replace(".", "")[:3])
-    except (ValueError, TypeError) as err:
-        print("get_kernel_version: ouch: %s" % (err,))
-        return None
-
-
-def check_if_driver_is_available(xdriver):
-    drv_path = "/usr/lib/xorg/modules/drivers/" + xdriver + "_drv.so"
-    if os.path.isfile(drv_path):
-        print("check_if_driver_is_available for " + xdriver + ": available")
-        return True
-    print("check_if_driver_is_available for " + xdriver + ": not available")
-    return False
-
-
-def check_if_proprietary_driver_system_is_healthy(kernelmod):
-    rc = subprocess.call(["modprobe", kernelmod])
-    if rc == 0 and kernelmod == "nvidia":
-        if os.path.exists("/usr/lib/opengl/nvidia/lib"):
-            print("check_if_proprietary_driver_system_is_healthy:"
-                  " nvidia healthy")
-            return True
-        print("check_if_proprietary_driver_system_is_healthy:"
-              " nvidia NOT healthy")
-    return False
-
-
-def deploy_nvidia_xxxxxx_drivers(ver):
-    if dryrun:
-        print("I was about to run deploy_nvidia_xxxxxx_drivers"
-              ", ver: %s" % (ver,))
-        return False
-
-    drivers_dir = "/install-data/drivers"
-    # are they available ? we're on livecd...
-    if not os.path.isdir(drivers_dir):
-        print("drivers_dir not available")
-        return False
-
-    packages = os.listdir(drivers_dir)
-    _packages = []
-    for pkg in packages:
-        if not pkg.endswith(".tbz2"):
-            continue
-        if pkg.startswith("x11-drivers:nvidia-drivers-" + ver):
-            _packages.append(pkg)
-        elif pkg.startswith("x11-drivers:nvidia-userspace-" + ver):
-            _packages.append(pkg)
-
-    packages = [os.path.join(drivers_dir, x) for x in _packages]
-    if not packages:
-        return False
-
-    rc = subprocess.call(["/usr/bin/equo", "install", "--nodeps"] + packages)
-    if rc:
-        return False
-
-    # try to check driver status now
-    return check_if_proprietary_driver_system_is_healthy("nvidia")
-
-
-efivars_loaded = False
-
-
-def is_efi():
-    """
-    Return whether the system boots from EFI
-    """
-    global efivars_loaded
-
-    if noefi:
-        return False
-
-    if not efivars_loaded:
-        subprocess.call(["modprobe", "efivars"])
-        efivars_loaded = True
-
-    return os.path.exists("/sys/firmware/efi")
-
-
-def get_vesa_driver():
-    """
-    Return either "vesa" or "fbdev" as the fallback
-    vesa-like X driver.
-    """
-    if is_efi():
-        # vesa does not work
-        return "fbdev"
-    return "vesa"
-
-
-def set_xorg_device(xdriver, cardnum, total_cards, bus_id):
-    if (xdriver not in ("nvidia")) and \
-            (not check_if_driver_is_available(xdriver)):
-        xdriver = get_vesa_driver()  # fallback to vesa
-    bus_id_mark = "#"
-    if total_cards > 1:
-        bus_id_mark = ""
-
-    device_sections.append("""
+        self.device_sections.append("""
 Section "Device"
 
     Identifier  "%s%s"
@@ -332,320 +230,454 @@ Section "Device"
     # UseEvents is causing segmentation faults with
     # NVIDIA 6xxx, 7xxx and >=275.xx.xx drivers
     #Option "UseEvents" "True"
-    Option "LogoPath" "/usr/share/backgrounds/sabayonlinux-nvidia.png"
+    %s
 
 EndSection
-    """ % (device_id_prefix, cardnum, xdriver, bus_id_mark, bus_id,))
+        """ % (self.device_id_prefix, cardnum, xdriver, bus_id_mark, bus_id,
+               opt_logopath))
 
-    my_screen_section = screen_section.replace("__screen_id__", str(cardnum))
-    # setup Option AddARGBVisuals
-    # especially needed for legacy nvidia drivers, but works
-    # on all of them
-    if xdriver == "nvidia":
-        my_screen_section = my_screen_section.replace(nvidia_option_prefix, "")
-    else:
-        my_screen_section = my_screen_section.replace(nvidia_option_prefix, "#")
-    screen_sections.append(my_screen_section)
-    screen_layout_sections.append('Screen %s    "Screen %s"' % (
+        self.screen_sections.append(my_screen_section)
+        self.screen_layout_sections.append('Screen %s    "Screen %s"' % (
             cardnum, cardnum,))
 
+    @staticmethod
+    def openrc_running():
+        return os.path.isfile("/run/openrc/softlevel")
 
-def opengl_activate(profile, force=False):
-    if not dryrun:
-        if not force:
-            current = opengl_show()
-            if current == profile:
-                print("OpenGL profile is already set to: " + profile)
-                return
-        subprocess.call(["eselect", "opengl", "set", profile])
-    else:
-        print("I was about to set opengl subsystem to: " + profile)
+    @staticmethod
+    def systemd_running():
+        return os.path.isdir("/run/systemd/system")
 
+    def remove_proprietary_opengl(self, bumblebee):
+        if not self.dryrun:
+            if not bumblebee:
+                os.system("""
+                mount -t tmpfs none /usr/lib/opengl/nvidia &> /dev/null
+                sed -i '/LIBGL_DRIVERS_PATH/ s/.*//' /etc/profile.env
+                """)
+                self.fix_possible_opengl_misconfiguration('xorg-x11')
+            else:
+                print("Bumblebee enabled, not deactivating proprietary drivers")
+        else:
+            print("I was about to remove proprietary OpenGL libraries")
 
-def opengl_show():
-    return getoutput("eselect opengl show").split("\n")[0].strip()
-
-
-def fix_possible_opengl_misconfiguration(profile):
-    # get current subsystem
-    current = opengl_show()
-    if not dryrun:
-        if (profile in ("nvidia", "xorg-x11")) and (profile != current):
-            if profile == "nvidia":
-                subprocess.call(["umount", "/usr/lib/opengl/" + profile])
-                subprocess.call(["umount", "/usr/lib/opengl/" + profile])
-                opengl_activate(profile)
-    else:
-        print("I was about to fix OpenGL subsystem to: " +
-              profile + " while the current implementation is: " +
-              current)
-
-
-def copy_nvidia_settings_on_desktop():
-    homes = []
-    if os.path.isfile(nvidia_settings):
-        homes += [x for x in os.listdir("/home")
-                  if os.path.isdir("/home/" + x + "/Desktop")]
-
-    for home in homes:
+    @staticmethod
+    def get_kernel_version():
         try:
+            return int(os.uname()[2].replace(".", "")[:3])
+        except (ValueError, TypeError) as err:
+            print("get_kernel_version: ouch: %s" % (err,))
+            return None
 
-            full_home = os.path.join("/home", home)
-            st = os.stat(full_home)
-            dest_path = "/home/" + home + "/Desktop/" + \
-                os.path.basename(nvidia_settings)
-            shutil.copy2(nvidia_settings, dest_path)
-            os.chmod(dest_path, 0o755)
-            os.chown(dest_path, st.st_uid, st.st_gid)
+    @staticmethod
+    def check_if_driver_is_available(xdriver):
+        drv_path = "/usr/lib/xorg/modules/drivers/" + xdriver + "_drv.so"
+        if os.path.isfile(drv_path):
+            print("check_if_driver_is_available for " + xdriver + ": available")
+            return True
+        print("check_if_driver_is_available for " + xdriver + ": not available")
+        return False
 
-            if os.path.isdir("/etc/skel/Desktop"):
-                dest_path = os.path.join(
-                    "/etc/skel/Desktop",
-                    os.path.basename(nvidia_settings))
+    @staticmethod
+    def check_if_proprietary_driver_system_is_healthy(kernelmod):
+        rc = subprocess.call(["modprobe", kernelmod])
+        if rc == 0 and kernelmod == "nvidia":
+            if os.path.exists("/usr/lib/opengl/nvidia/lib"):
+                print("check_if_proprietary_driver_system_is_healthy:"
+                      " nvidia healthy")
+                return True
+            print("check_if_proprietary_driver_system_is_healthy:"
+                  " nvidia NOT healthy")
+        return False
+
+    def deploy_nvidia_xxxxxx_drivers(self, ver):
+        if self.dryrun:
+            print("I was about to run deploy_nvidia_xxxxxx_drivers"
+                  ", ver: %s" % (ver,))
+            return False
+
+        drivers_dir = "/install-data/drivers"
+        # are they available ? we're on livecd...
+        if not os.path.isdir(drivers_dir):
+            print("drivers_dir not available")
+            return False
+
+        packages = os.listdir(drivers_dir)
+        _packages = []
+        for pkg in packages:
+            if not pkg.endswith(".tbz2"):
+                continue
+            if pkg.startswith("x11-drivers:nvidia-drivers-" + ver):
+                _packages.append(pkg)
+            elif pkg.startswith("x11-drivers:nvidia-userspace-" + ver):
+                _packages.append(pkg)
+
+        packages = [os.path.join(drivers_dir, x) for x in _packages]
+        if not packages:
+            return False
+
+        rc = subprocess.call(["/usr/bin/equo", "install", "--nodeps"] + packages)
+        if rc:
+            return False
+
+        # try to check driver status now
+        return self.check_if_proprietary_driver_system_is_healthy("nvidia")
+
+    def is_efi(self):
+        """
+        Return whether the system boots from EFI
+        """
+        if self.noefi:
+            return False
+
+        if not self.efivars_loaded:
+            subprocess.call(["modprobe", "efivars"])
+            self.efivars_loaded = True
+
+        return os.path.exists("/sys/firmware/efi")
+
+    def opengl_activate(self, profile, force=False):
+        if not self.dryrun:
+            if not force:
+                current = self.opengl_show()
+                if current == profile:
+                    print("OpenGL profile is already set to: " + profile)
+                    return
+            subprocess.call(["eselect", "opengl", "set", profile])
+        else:
+            print("I was about to set opengl subsystem to: " + profile)
+
+    @staticmethod
+    def opengl_show():
+        return getoutput("eselect opengl show").split("\n")[0].strip()
+
+    def fix_possible_opengl_misconfiguration(self, profile):
+        # get current subsystem
+        current = self.opengl_show()
+        if not self.dryrun:
+            if (profile in ("nvidia", "xorg-x11")) and (profile != current):
+                if profile == "nvidia":
+                    subprocess.call(["umount", "/usr/lib/opengl/" + profile])
+                    subprocess.call(["umount", "/usr/lib/opengl/" + profile])
+                    self.opengl_activate(profile)
+        else:
+            print("I was about to fix OpenGL subsystem to: " +
+                  profile + " while the current implementation is: " +
+                  current)
+
+    @staticmethod
+    def copy_nvidia_settings_on_desktop():
+        homes = []
+        if os.path.isfile(nvidia_settings):
+            homes += [x for x in os.listdir("/home")
+                      if os.path.isdir("/home/" + x + "/Desktop")]
+
+        for home in homes:
+            try:
+
+                full_home = os.path.join("/home", home)
+                st = os.stat(full_home)
+                dest_path = "/home/" + home + "/Desktop/" + \
+                            os.path.basename(nvidia_settings)
                 shutil.copy2(nvidia_settings, dest_path)
                 os.chmod(dest_path, 0o755)
+                os.chown(dest_path, st.st_uid, st.st_gid)
 
-        except Exception:
-            pass
+                if os.path.isdir("/etc/skel/Desktop"):
+                    dest_path = os.path.join(
+                        "/etc/skel/Desktop",
+                        os.path.basename(nvidia_settings))
+                    shutil.copy2(nvidia_settings, dest_path)
+                    os.chmod(dest_path, 0o755)
 
+            except Exception:
+                pass
 
-def setup_nvidia_drivers(card_id):
-    drv_string = ''
-    done_legacy = False
+    def setup_nvidia_drivers(self, card_id):
+        drv_string = ''
+        done_legacy = False
 
-    drivers_map = (
-        ("304", nvidia_304xx_supported,),
-        ("173", nvidia_173xx_supported,),
-        ("96", nvidia_173xx_supported,),
-        ("71", nvidia_173xx_supported,),
+        drivers_map = (
+            ("390", nvidia_390xx_supported,),
         )
 
-    if not nvidia_disablelegacy:
-        for ver, lst in drivers_map:
-            if card_id not in lst:
-                continue
-            print("NVIDIA %s driver selected" % (ver,))
-            drv_string = ver
-            if livecd:
-                rc = deploy_nvidia_xxxxxx_drivers(ver)
-                if rc:
-                    print("NVIDIA %s deployed correctly" % (ver,))
-                    done_legacy = True
-                    break
+        if not self.nvidia_disablelegacy:
+            for ver, lst in drivers_map:
+                if card_id not in lst:
+                    continue
+                print("NVIDIA %s driver selected" % (ver,))
+                drv_string = ver
+                if self.livecd:
+                    rc = self.deploy_nvidia_xxxxxx_drivers(ver)
+                    if rc:
+                        print("NVIDIA %s deployed correctly" % (ver,))
+                        done_legacy = True
+                        break
 
-    if not done_legacy:
-        drv_string = '[latest]'
-        print("latest and greatest NVIDIA driver selected or unsupported")
+        if not done_legacy:
+            drv_string = '[latest]'
+            print("latest and greatest NVIDIA driver selected or unsupported")
 
-    healthy = check_if_proprietary_driver_system_is_healthy("nvidia")
-    if healthy:
-        print("NVIDIA proprietary driver %s is loaded" % (drv_string,))
+        healthy = self.check_if_proprietary_driver_system_is_healthy("nvidia")
+        if healthy:
+            print("NVIDIA proprietary driver %s is loaded" % (drv_string,))
 
-        if done_legacy:
-            try:
-                os.makedirs("/lib/nvidia/legacy")
-            except OSError as err:
-                if err.errno != errno.EEXIST:
-                    raise
-            with open("/lib/nvidia/legacy/running", "w") as f:
-                f.write("%s" % (drv_string,))
+            if done_legacy:
+                try:
+                    os.makedirs("/lib/nvidia/legacy")
+                except OSError as err:
+                    if err.errno != errno.EEXIST:
+                        raise
+                with open("/lib/nvidia/legacy/running", "w") as f:
+                    f.write("%s" % (drv_string,))
 
-    return done_legacy, healthy
+        return done_legacy, healthy
 
+    def generate_nvidia_bumblebee_steps(self, card_id):
+        done_legacy, healthy = self.setup_nvidia_drivers(card_id)
+        if not healthy:
+            print("NVIDIA drivers couldn't be loaded, cannot enable bumblebee")
+            return
 
-def generate_nvidia_bumblebee_steps(v3dcard, company_id, card_id):
-    done_legacy, healthy = setup_nvidia_drivers(card_id)
-    if not healthy:
-        print("NVIDIA drivers couldn't be loaded, cannot enable bumblebee")
-        return
+        if self.dryrun:
+            print("Was about to start bumblebee")
+            return
 
-    if dryrun:
-        print("Was about to start bumblebee")
-        return
+        if not self.livecd:
+            print("LiveCD mode off, not starting bumblebee service")
+            return
 
-    if not livecd:
-        print("LiveCD mode off, not starting bumblebee service")
-        return
+        # This is used by our Installer
+        with open("/tmp/.bumblebee.enabled", "w") as f:
+            pass
 
-    # This is used by our Installer
-    with open("/tmp/.bumblebee.enabled", "w") as f:
-        pass
+        if self.openrc_running():
+            os.system("/etc/init.d/bumblebee start")
+        elif self.systemd_running():
+            os.system("/usr/bin/systemctl start bumblebeed")
 
-    if openrc_running():
-        os.system("/etc/init.d/bumblebee start")
-    elif systemd_running():
-        os.system("/usr/bin/systemctl start bumblebeed")
+    def generate_nvidia_steps(self, videocard, cardnumber, total_cards, bus_id):
+        comp_id, card_id = self.extract_pci_ids(videocard)
+        done_legacy, healthy = self.setup_nvidia_drivers(card_id)
 
+        if healthy:
+            if done_legacy:
+                # then activate nvidia opengl subsystem after resetting it
+                self.steps.append(('opengl_activate', "xorg-x11"))
+                self.steps.append(('opengl_activate', "nvidia"))
 
-def generate_nvidia_steps(videocard, cardnumber, total_cards, bus_id):
-    comp_id, card_id = extract_pci_ids(videocard)
-    done_legacy, healthy = setup_nvidia_drivers(card_id)
+                self.steps.append(('set_xorg_device', "nvidia",
+                                   cardnumber, total_cards, bus_id,))
+                self.steps.append(('fix_possible_opengl_misconfiguration', "nvidia"))
+                self.steps.append(('copy_nvidia_settings_on_desktop',))
 
-    if healthy:
-        if done_legacy:
-            # then activate nvidia opengl subsystem after resetting it
-            steps.append((opengl_activate, "xorg-x11"))
-            steps.append((opengl_activate, "nvidia"))
-
-            steps.append((set_xorg_device, "nvidia",
-                          cardnumber, total_cards, bus_id,))
-            steps.append((fix_possible_opengl_misconfiguration, "nvidia"))
-            steps.append((copy_nvidia_settings_on_desktop,))
-
-        else:
-
-            steps.append((fix_possible_opengl_misconfiguration, "nvidia"))
-            steps.append((copy_nvidia_settings_on_desktop,))
-            steps.append((opengl_activate, "nvidia"))
-            steps.append((set_xorg_device, "nvidia",
-                          cardnumber, total_cards, bus_id,))
-    else:
-        print("NVIDIA drivers couldn't be loaded, switchting to nv driver")
-        steps.append((opengl_activate, "xorg-x11"))
-
-
-def generate_generic_steps():
-    steps.append((remove_proprietary_opengl, bb_enabled))
-    steps.append((opengl_activate, "xorg-x11",))
-
-
-def drop_kernel_mod(kmod):
-    return subprocess.call(["modprobe", "-r", kmod])
-
-
-def extract_pci_ids(videocard_str):
-    videocard_split = [x.strip() for x in videocard_str.strip().split('"')
-                       if x.strip()]
-    try:
-        card_id = videocard_split[3].split()[-1].lower().strip("[]")
-    except IndexError:
-        card_id = None
-
-    try:
-        company_id = videocard_split[2].split()[-1].lower().strip("[]")
-    except IndexError:
-        company_id = None
-
-    return company_id, card_id
-
-
-def extract_vga_cards(lspci_list):
-    cards = []
-    for item in lspci_list:
-        try:
-            class_type = item.split()[1].strip('"')
-            if class_type == "0300":
-                cards.append(item)
-        except IndexError:
-            continue
-    return cards
-
-
-def extract_3d_cards(lspci_list):
-    # bumblebee support
-    cards = []
-    for item in lspci_list:
-        try:
-            class_type = item.split()[1].strip('"')
-            if class_type == "0302":
-                cards.append(item)
-        except IndexError:
-            continue
-    return cards
-
-
-# Create videocards list
-lspci_out_split = lspci_output.split("\n")
-videocards = extract_vga_cards(lspci_out_split)
-v3dcards = extract_3d_cards(lspci_out_split)
-# Run the program
-cardnumber = -1
-
-total_cards = len(videocards)
-forced_monitor_modes = False
-steps = []
-bb_enabled = False
-write_config = False
-
-for v3dcard in v3dcards:
-
-    company_id, card_id = extract_pci_ids(v3dcard)
-
-    if company_id == "10de":
-        print("NVIDIA Optimus 3D Acceleration detected, enabling bumblebee")
-        generate_nvidia_bumblebee_steps(v3dcard, company_id, card_id)
-        bb_enabled = True
-
-for videocard in videocards:
-
-    # setup card number
-    cardnumber += 1
-    print("Card Number: " + str(cardnumber))
-    try:
-        bus_id = "PCI:%s" % (
-                videocard.split()[0].split(".", 1)[0]
-            )
-    except (IndexError, ValueError, TypeError,):
-        bus_id = None
-
-    if forced_xdriver:
-        print("You have chosen to force the X driver: " + forced_xdriver)
-        if forced_xdriver == "nvidia" and (not noproprietary):
-            generate_nvidia_steps(videocard, cardnumber, total_cards, bus_id)
-        elif forced_xdriver == "vesa":
-            forced_monitor_modes = True
-        else:
-            generate_generic_steps()
-            steps.append((set_xorg_device, forced_xdriver,
-                          cardnumber, total_cards, bus_id,))
-        write_config = True
-
-    else:
-        company_id, card_id = extract_pci_ids(videocard)
-        print("[%s] company_id: %s | card_id: %s" % (
-                cardnumber, company_id, card_id,))
-
-        if company_id == "10de":  # NVIDIA
-            if noproprietary:
-                steps.append((set_xorg_device, "nouveau",
-                              cardnumber, total_cards, bus_id,))
             else:
-                generate_nvidia_steps(
-                    videocard, cardnumber, total_cards, bus_id)
-                print("NVIDIA!")
-            write_config = True
 
+                self.steps.append(('fix_possible_opengl_misconfiguration', "nvidia"))
+                self.steps.append(('copy_nvidia_settings_on_desktop',))
+                self.steps.append(('opengl_activate', "nvidia"))
+                self.steps.append(('set_xorg_device', "nvidia",
+                                   cardnumber, total_cards, bus_id,))
         else:
-            generate_generic_steps()
-            print("GPU will be automatically detected by X.Org and udevd")
+            print("NVIDIA drivers couldn't be loaded, switchting to nv driver")
+            self.steps.append(('opengl_activate', "xorg-x11"))
+
+    def generate_generic_steps(self):
+        self.steps.append(('remove_proprietary_opengl', self.bb_enabled))
+        self.steps.append(('opengl_activate', "xorg-x11",))
+
+    @staticmethod
+    def drop_kernel_mod(kmod):
+        return subprocess.call(["modprobe", "-r", kmod])
+
+    @staticmethod
+    def extract_pci_ids(videocard_str):
+        videocard_split = [x.strip() for x in videocard_str.strip().split('"')
+                           if x.strip()]
+        try:
+            card_id = videocard_split[3].split()[-1].lower().strip("[]")
+        except IndexError:
+            card_id = None
+
+        try:
+            company_id = videocard_split[2].split()[-1].lower().strip("[]")
+        except IndexError:
+            company_id = None
+
+        return company_id, card_id
+
+    @staticmethod
+    def extract_vga_cards(lspci_list):
+        cards = []
+        for item in lspci_list:
+            try:
+                class_type = item.split()[1].strip('"')
+                if class_type == "0300":
+                    cards.append(item)
+            except IndexError:
+                continue
+        return cards
+
+    @staticmethod
+    def extract_3d_cards(lspci_list):
+        # bumblebee support
+        cards = []
+        for item in lspci_list:
+            try:
+                class_type = item.split()[1].strip('"')
+                if class_type == "0302":
+                    cards.append(item)
+            except IndexError:
+                continue
+        return cards
+
+    def main(self, cmd_argv):
+
+        self.options = cmd_argv[1:]
+        self.xorgfile = os.getenv('SABAYON_XORG_CONF', "/etc/X11/xorg.conf")
+
+        lspci_output = ''
+        for option in self.options:
+            if option == "--dry-run":
+                self.dryrun = True
+            elif option.startswith('--with-lspci=') and len(option.split("=")) >= 2:
+                option = option.split("=")[1:]
+                option = "=".join(option)
+                if option.startswith('"'):
+                    option = option[1:]
+                if option.startswith("'"):
+                    option = option[1:]
+                if option.endswith("'"):
+                    option = option[:len(option)-1]
+                if option.endswith('"'):
+                    option = option[:len(option)-1]
+                lspci_output = option
+            elif option.startswith('--forced-xdriver=') and len(option.split("=")) == 2:
+                self.forced_xdriver = option.split("=")[1]
+
+        if not lspci_output:
+            lspci_output = getoutput(lspci+' -mm -n')
+
+        # parse cmdline
+        with open("/proc/cmdline", "r") as f:
+            cmdline = f.readline().split()
+        for cmd in cmdline:
+            if cmd == "noproprietary":
+                self.no_proprietary = True
+            elif cmd == "nomodeset":
+                self.nomodeset = True
+            elif cmd == "nvidia=disablelegacy":
+                self.nvidia_disablelegacy = True
+            elif cmd == "legacy":
+                self.legacy = True
+            elif cmd == "cdroot":
+                self.livecd = True
+            elif cmd == "noefi":
+                self.noefi = True
+            elif cmd.startswith("xdriver=") and (len(cmd.split("=")) == 2):
+                if not self.forced_xdriver:
+                    self.forced_xdriver = cmd.split("=")[1]  # --forced-xdriver= owns
+
+        # Create videocards list
+        lspci_out_split = lspci_output.split("\n")
+        videocards = self.extract_vga_cards(lspci_out_split)
+        v3dcards = self.extract_3d_cards(lspci_out_split)
+        # Run the program
+        cardnumber = -1
+
+        total_cards = len(videocards)
+        forced_monitor_modes = False
+        steps = []
+        write_config = False
+
+        # Retrieve 3d card data
+        for v3dcard in v3dcards:
+            company_id, card_id = self.extract_pci_ids(v3dcard)
+            if company_id == "10de":
+                print("NVIDIA Optimus 3D Acceleration detected, enabling bumblebee")
+                self.generate_nvidia_bumblebee_steps(card_id)
+                self.bb_enabled = True
+
+        for videocard in videocards:
+
+            # setup card number
+            cardnumber += 1
+            print("Card Number: " + str(cardnumber))
+            try:
+                bus_id = "PCI:%s" % (
+                    videocard.split()[0].split(".", 1)[0]
+                )
+            except (IndexError, ValueError, TypeError,):
+                bus_id = None
+
+            if self.forced_xdriver:
+                print("You have chosen to force the X driver: " + self.forced_xdriver)
+                if self.forced_xdriver == "nvidia" and (not self.no_proprietary):
+                    self.generate_nvidia_steps(videocard, cardnumber, total_cards, bus_id)
+                elif self.forced_xdriver == "vesa":
+                    forced_monitor_modes = True
+                else:
+                    self.generate_generic_steps()
+                    self.steps.append(('set_xorg_device', self.forced_xdriver,
+                                  cardnumber, total_cards, bus_id,))
+                write_config = True
+
+            else:
+                company_id, card_id = self.extract_pci_ids(videocard)
+                print("[%s] company_id: %s | card_id: %s" % (
+                    cardnumber, company_id, card_id,))
+
+                if company_id == "10de":  # NVIDIA
+                    if self.no_proprietary:
+                        self.steps.append(('set_xorg_device', "nouveau",
+                                      cardnumber, total_cards, bus_id,))
+                    else:
+                        self.generate_nvidia_steps(
+                            videocard, cardnumber, total_cards, bus_id)
+                        print("NVIDIA!")
+                    write_config = True
+
+                else:
+                    self.generate_generic_steps()
+                    print("GPU will be automatically detected by X.Org and udevd")
+
+        # now create the file
+        for args in self.steps:
+            func, args = args[0], args[1:]
+            method = getattr(self, func)
+            method(*args)
+
+        if write_config:
+            config = self.xorg_conf_structure.replace(
+                '__device_section__',
+                '\n\n'.join(self.device_sections))
+            config = config.replace(
+                '__screen_section__',
+                '\n\n'.join(self.screen_sections))
+            config = config.replace(
+                '__screen_layout_section__',
+                '\n    '.join(self.screen_layout_sections))
+            if forced_monitor_modes:
+                config = config.replace('#Modes', 'Modes')
+
+            if not self.dryrun:
+                with open(self.xorgfile, "w") as f:
+                    f.write(config)
+                    f.flush()
+        else:
+            try:
+                os.remove(self.xorgfile)
+            except (OSError, IOError):
+                pass
+
+        return 0
 
 
-# now create the file
-for args in steps:
-    func, args = args[0], args[1:]
-    func(*args)
+def main():
+    configurator = SabayonGpuConfigurator()
+    the_exit = configurator.main(argv)
+    goto(the_exit)
 
-if write_config:
-    config = xorg_conf_structure.replace(
-        '__device_section__',
-        '\n\n'.join(device_sections))
-    config = config.replace(
-        '__screen_section__',
-        '\n\n'.join(screen_sections))
-    config = config.replace(
-        '__screen_layout_section__',
-        '\n    '.join(screen_layout_sections))
-    if forced_monitor_modes:
-        config = config.replace('#Modes', 'Modes')
 
-    if not dryrun:
-        with open(xorgfile, "w") as f:
-            f.write(config)
-            f.flush()
-else:
-    try:
-        os.remove(xorgfile)
-    except (OSError, IOError):
-        pass
-
-raise SystemExit(0)
+if __name__ == '__main__':
+    main()
