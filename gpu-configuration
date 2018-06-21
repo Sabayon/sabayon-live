@@ -14,6 +14,7 @@ from sys import exit as goto, argv
 
 lspci = '/usr/sbin/lspci'
 nvidia_settings = "/usr/share/applications/nvidia-settings.desktop"
+modprobe_blacklist = '/etc/modprobe.d/blacklist.conf'
 
 # Taken from here:
 # http://www.nvidia.com/object/IO_32667.html
@@ -519,6 +520,51 @@ EndSection
         return cards
 
     @staticmethod
+    def modify_modprobe_blacklist(kmod):
+
+        blist_nouveau_present = False
+        blist_nvidia_present = False
+        blist_nvidia_drm_present = False
+
+        # Rename previous file
+        shutil.move(modprobe_blacklist,
+                    '%s%s' % (modprobe_blacklist, '.old'))
+
+        dst = open(modprobe_blacklist, 'w')
+        src = open('%s%s' % (modprobe_blacklist, '.old'))
+        data = src.readlines()
+        src.close()
+
+        for row in data:
+            if row.startswith('blacklist nvidia_drm'):
+                if kmod == 'nvidia':
+                    dst.write('%s%s' % ('#', row))
+                else:
+                    dst.write(row)
+                blist_nvidia_drm_present = True
+            elif row.startswith('blacklist nvidia'):
+                if kmod == 'nvidia':
+                    dst.write('%s%s' % ('#', row))
+                else:
+                    dst.write(row)
+                blist_nvidia_present = True
+            elif row.startswith('blacklist nouveau'):
+                if kmod == 'nvidia':
+                    dst.write(row)
+                else:
+                    dst.write('%s%s' % ('#', row))
+                blist_nouveau_present = True
+
+        if kmod == 'nvidia' and not blist_nouveau_present:
+            dst.write('blacklist nouveau')
+        if kmod == 'nouveau' and not blist_nvidia_present:
+            dst.write('blacklist nvidia')
+        if kmod == 'nouveau' and not blist_nvidia_drm_present:
+            dst.write('blacklist nvidia_drm')
+
+        dst.close()
+
+    @staticmethod
     def extract_3d_cards(lspci_list):
         # bumblebee support
         cards = []
@@ -587,8 +633,8 @@ EndSection
 
         total_cards = len(videocards)
         forced_monitor_modes = False
-        steps = []
         write_config = False
+        update_modprobe_blist = False
 
         # Retrieve 3d card data
         for v3dcard in v3dcards:
@@ -629,9 +675,17 @@ EndSection
 
                 if company_id == "10de":  # NVIDIA
                     if self.no_proprietary:
+                        if not update_modprobe_blist:
+                            self.modify_modprobe_blacklist('nouveau')
+                            update_modprobe_blist = True
+
                         self.steps.append(('set_xorg_device', "nouveau",
                                       cardnumber, total_cards, bus_id,))
                     else:
+                        if not update_modprobe_blist:
+                            self.modify_modprobe_blacklist('nvidia')
+                            update_modprobe_blist = True
+
                         self.generate_nvidia_steps(
                             videocard, cardnumber, total_cards, bus_id)
                         print("NVIDIA!")
