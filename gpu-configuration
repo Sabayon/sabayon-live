@@ -397,6 +397,7 @@ EndSection
     def setup_nvidia_drivers(self, card_id):
         drv_string = ''
         done_legacy = False
+        legacy_def_version = '390'
 
         drivers_map = (
             ("390", nvidia_390xx_supported,),
@@ -416,8 +417,20 @@ EndSection
                         break
 
         if not done_legacy:
-            drv_string = '[latest]'
-            print("latest and greatest NVIDIA driver selected or unsupported")
+            if self.legacy and not self.nvidia_disablelegacy:
+                drv_string = legacy_def_version
+                if self.livecd:
+                    print('Trying to use legacy nvidia driver %s' % (
+                        legacy_def_version
+                    ))
+                    rc = self.deploy_nvidia_xxxxxx_drivers(legacy_def_version)
+                    if rc:
+                        print("NVIDIA %s deployed correctly" % (
+                            legacy_def_version)
+                        )
+            else:
+                drv_string = '[latest]'
+                print("latest and greatest NVIDIA driver selected or unsupported")
 
         healthy = self.check_if_proprietary_driver_system_is_healthy("nvidia")
         if healthy:
@@ -586,7 +599,10 @@ EndSection
         for option in self.options:
             if option == "--dry-run":
                 self.dryrun = True
-            elif option.startswith('--with-lspci=') and len(option.split("=")) >= 2:
+            elif option == '--legacy':
+                self.legacy = True
+            elif option.startswith('--with-lspci=') and \
+                    len(option.split("=")) >= 2:
                 option = option.split("=")[1:]
                 option = "=".join(option)
                 if option.startswith('"'):
@@ -598,7 +614,8 @@ EndSection
                 if option.endswith('"'):
                     option = option[:len(option)-1]
                 lspci_output = option
-            elif option.startswith('--forced-xdriver=') and len(option.split("=")) == 2:
+            elif option.startswith('--forced-xdriver=') and \
+                    len(option.split("=")) == 2:
                 self.forced_xdriver = option.split("=")[1]
 
         if not lspci_output:
