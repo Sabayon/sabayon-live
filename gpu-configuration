@@ -680,6 +680,8 @@ EndSection
                 elif self.forced_xdriver == "vesa":
                     forced_monitor_modes = True
                 else:
+                    if self.forced_xdriver == 'nouveau':
+                        self.modify_modprobe_blacklist('nouveau')
                     self.generate_generic_steps()
                     self.steps.append(('set_xorg_device', self.forced_xdriver,
                                   cardnumber, total_cards, bus_id,))
