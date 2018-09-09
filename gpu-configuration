@@ -112,6 +112,7 @@ class SabayonGpuConfigurator:
         self.device_sections = []
         self.screen_sections = []
         self.bb_enabled = False
+        self.debug = False
 
         self.xorg_conf_structure = """
 Section "Module"
@@ -493,8 +494,12 @@ EndSection
                 self.steps.append(('set_xorg_device', "nvidia",
                                    cardnumber, total_cards, bus_id,))
         else:
-            print("NVIDIA drivers couldn't be loaded, switchting to nv driver")
+            print(
+                "NVIDIA drivers couldn't be loaded, switchting to nouveau driver"
+            )
             self.steps.append(('opengl_activate', "xorg-x11"))
+            self.steps.append(('set_xorg_device', 'nouveau',
+                               cardnumber, total_cards, bus_id,))
 
     def generate_generic_steps(self):
         self.steps.append(('remove_proprietary_opengl', self.bb_enabled))
@@ -532,19 +537,26 @@ EndSection
                 continue
         return cards
 
-    @staticmethod
-    def modify_modprobe_blacklist(kmod):
+    def modify_modprobe_blacklist(self, kmod):
 
         blist_nouveau_present = False
         blist_nvidia_present = False
         blist_nvidia_drm_present = False
 
-        # Rename previous file
-        shutil.move(modprobe_blacklist,
-                    '%s%s' % (modprobe_blacklist, '.old'))
+        if self.dryrun:
+            old_file = '/tmp/%s%s' % (
+                os.path.basename(modprobe_blacklist), '.old'
+            )
+            # Use /tmp for create debug files
+            shutil.copy(modprobe_blacklist, old_file)
+            dst = open('/tmp/%s' % os.path.basename(modprobe_blacklist), 'w')
+        else:
+            old_file = '%s%s' % (modprobe_blacklist, '.old')
+            # Rename previous file
+            shutil.move(modprobe_blacklist, old_file)
+            dst = open(modprobe_blacklist, 'w')
 
-        dst = open(modprobe_blacklist, 'w')
-        src = open('%s%s' % (modprobe_blacklist, '.old'))
+        src = open(old_file, 'r')
         data = src.readlines()
         src.close()
 
@@ -601,6 +613,8 @@ EndSection
                 self.dryrun = True
             elif option == '--legacy':
                 self.legacy = True
+            elif option == '--debug':
+                self.debug = True
             elif option.startswith('--with-lspci=') and \
                     len(option.split("=")) >= 2:
                 option = option.split("=")[1:]
@@ -733,7 +747,7 @@ EndSection
             if forced_monitor_modes:
                 config = config.replace('#Modes', 'Modes')
 
-            if not self.dryrun:
+            if not self.dryrun or self.debug:
                 with open(self.xorgfile, "w") as f:
                     f.write(config)
                     f.flush()
