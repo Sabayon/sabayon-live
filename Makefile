@@ -1,7 +1,7 @@
 SUBDIRS =
 DESTDIR = 
 UBINDIR ?= /usr/bin
-LIBDIR ?= /usr/lib
+LIBDIR ?= /lib
 SBINDIR ?= /sbin
 USBINDIR ?= /usr/sbin
 BINDIR ?= /bin

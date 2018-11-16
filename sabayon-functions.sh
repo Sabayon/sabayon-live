@@ -135,12 +135,12 @@ sabayon_setup_vt_autologin() {
         export CDBOOT=1
         livecd_fix_inittab
     elif systemd_running; then
-        cp /usr/lib/systemd/system/getty@.service \
+        cp /lib/systemd/system/getty@.service \
             /etc/systemd/system/autologin@.service
         sed -i "/^ExecStart=/ s:/sbin/agetty:/sbin/agetty --autologin root:g" \
-            /usr/lib/systemd/system/getty@.service
+            /lib/systemd/system/getty@.service
         sed -i "/^ExecStart=/ s:--noclear::g" \
-            /usr/lib/systemd/system/getty@.service
+            /lib/systemd/system/getty@.service
         systemctl daemon-reload
         systemctl restart getty@tty1
     fi
