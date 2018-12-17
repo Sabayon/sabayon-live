@@ -40,7 +40,8 @@ install:
 	install -m 0755 sabutil $(DESTDIR)/$(UBINDIR)/
 	install -m 0755 sabayon-live-check $(DESTDIR)/$(UBINDIR)/
 	install -m 0755 sabayon-welcome-loader $(DESTDIR)/$(UBINDIR)/
-
+        install -m 0755 installer-x $(DESTDIR)/$(UBINDIR)/
+	
 	install -d $(DESTDIR)/$(SYSCONFDIR)/sabayon
 	install -m 0644 sabayon-welcome-loader.desktop $(DESTDIR)/$(SYSCONFDIR)/sabayon
 
