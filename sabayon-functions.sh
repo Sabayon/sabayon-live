@@ -40,8 +40,11 @@ sabayon_setup_autologin() {
 
     # SDDM
     if [ -f "$SDDM_FILE" ]; then
-        sed -i "s/^User=.*/User=${LIVE_USER}/" $SDDM_FILE
-        sed -i "s/^Session=.*/Session=default/" $SDDM_FILE
+	sed -i "s/^User=.*/User=${LIVE_USER}/" $SDDM_FILE
+	sed -i "s/^Session=.*/Session=default/" $SDDM_FILE
+
+	# This fix shutdown issue with sddm
+	systemctl stop getty@tty1
     fi
 
     # LightDM
