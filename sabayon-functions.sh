@@ -226,7 +226,7 @@ sabayon_fixup_gnome_autologin_session() {
         return 0
     fi
 
-    sabayon_setup_desktop_session "${usr}" "${cur_session}"
+    sabayon_setup_desktop_session "${LIVE_USER}" "${cur_session}"
 }
 
 sabayon_setup_text_installer() {
