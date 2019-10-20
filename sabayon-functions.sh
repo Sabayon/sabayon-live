@@ -23,6 +23,10 @@ sabayon_setup_autologin() {
         sed -i "s/^TimedLogin=.*/TimedLogin=${LIVE_USER}/" ${GDM_FILE}
         sed -i "s/^TimedLoginDelay=.*/TimedLoginDelay=0/" ${GDM_FILE}
 
+        # It seems that restart of the getty@tty1.service (inside sabayon_setup_vt_autologin)
+        # block gdm bootstrap
+        sed -i "s/^Conflicts=getty@t.*//g" ${GDM_FILE}
+
     elif [ -f "${CUSTOM_GDM_FILE}" ]; then
         # FIXME: if this is called multiple times, it generates duplicated entries
         sed -i "s:\[daemon\]:\[daemon\]\nAutomaticLoginEnable=true\nAutomaticLogin=${LIVE_USER}\nTimedLoginEnable=true\nTimedLogin=${LIVE_USER}\nTimedLoginDelay=0:" \
@@ -30,6 +34,7 @@ sabayon_setup_autologin() {
         # change other entries there
         sed -i "s/^TimedLogin=.*/TimedLogin=${LIVE_USER}/" "${CUSTOM_GDM_FILE}"
         sed -i "s/^AutomaticLogin=.*/AutomaticLogin=${LIVE_USER}/" "${CUSTOM_GDM_FILE}"
+        sed -i "s/^Conflicts=getty@t.*//g" ${CUSTOM_GDM_FILE}
     fi
 
     # LXDM
@@ -40,11 +45,11 @@ sabayon_setup_autologin() {
 
     # SDDM
     if [ -f "$SDDM_FILE" ]; then
-	sed -i "s/^User=.*/User=${LIVE_USER}/" $SDDM_FILE
-	sed -i "s/^Session=.*/Session=default/" $SDDM_FILE
+        sed -i "s/^User=.*/User=${LIVE_USER}/" $SDDM_FILE
+        sed -i "s/^Session=.*/Session=default/" $SDDM_FILE
 
-	# This fix shutdown issue with sddm
-#	systemctl stop getty@tty1
+        # This fix shutdown issue with sddm
+        #	systemctl stop getty@tty1
     fi
 
     # LightDM
