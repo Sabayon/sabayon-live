@@ -34,7 +34,7 @@ sabayon_setup_autologin() {
         # change other entries there
         sed -i "s/^TimedLogin=.*/TimedLogin=${LIVE_USER}/" "${CUSTOM_GDM_FILE}"
         sed -i "s/^AutomaticLogin=.*/AutomaticLogin=${LIVE_USER}/" "${CUSTOM_GDM_FILE}"
-        sed -i "s/^Conflicts=getty@t.*//g" ${CUSTOM_GDM_FILE}
+        sed -i "s/^Conflicts=getty@t.*//g" /lib/systemd/system/gdm.service
     fi
 
     # LXDM
