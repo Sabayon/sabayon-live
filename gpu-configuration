@@ -254,7 +254,7 @@ EndSection
         if not self.dryrun:
             if not bumblebee:
                 os.system("""
-                mount -t tmpfs none /usr/lib/opengl/nvidia &> /dev/null
+                mount -t tmpfs none /usr/lib64/opengl/nvidia &> /dev/null
                 sed -i '/LIBGL_DRIVERS_PATH/ s/.*//' /etc/profile.env
                 """)
                 self.fix_possible_opengl_misconfiguration('xorg-x11')
@@ -273,7 +273,7 @@ EndSection
 
     @staticmethod
     def check_if_driver_is_available(xdriver):
-        drv_path = "/usr/lib/xorg/modules/drivers/" + xdriver + "_drv.so"
+        drv_path = "/usr/lib64/xorg/modules/drivers/" + xdriver + "_drv.so"
         if os.path.isfile(drv_path):
             print("check_if_driver_is_available for " + xdriver + ": available")
             return True
@@ -284,7 +284,7 @@ EndSection
     def check_if_proprietary_driver_system_is_healthy(kernelmod):
         rc = subprocess.call(["modprobe", kernelmod])
         if rc == 0 and kernelmod == "nvidia":
-            if os.path.exists("/usr/lib/opengl/nvidia/lib"):
+            if os.path.exists("/usr/lib64/opengl/nvidia/lib"):
                 print("check_if_proprietary_driver_system_is_healthy:"
                       " nvidia healthy")
                 return True
@@ -359,8 +359,8 @@ EndSection
         if not self.dryrun:
             if (profile in ("nvidia", "xorg-x11")) and (profile != current):
                 if profile == "nvidia":
-                    subprocess.call(["umount", "/usr/lib/opengl/" + profile])
-                    subprocess.call(["umount", "/usr/lib/opengl/" + profile])
+                    subprocess.call(["umount", "/usr/lib64/opengl/" + profile])
+                    subprocess.call(["umount", "/usr/lib64/opengl/" + profile])
                     self.opengl_activate(profile)
         else:
             print("I was about to fix OpenGL subsystem to: " +
