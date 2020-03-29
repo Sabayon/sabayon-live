@@ -469,7 +469,7 @@ EndSection
         if self.openrc_running():
             os.system("/etc/init.d/bumblebee start")
         elif self.systemd_running():
-            os.system("/usr/bin/systemctl start bumblebeed")
+            os.system("/bin/systemctl start bumblebeed")
 
     def generate_nvidia_steps(self, videocard, cardnumber, total_cards, bus_id):
         comp_id, card_id = self.extract_pci_ids(videocard)
