@@ -200,7 +200,7 @@ EndSection
 
     def set_xorg_device(self, xdriver, cardnum, total_cards, bus_id):
         opt_logopath = 'Option "LogoPath" "/usr/share/backgrounds/sabayonlinux-nvidia.png"'
-        if (xdriver not in ("nvidia")) and \
+        if xdriver not in ("nvidia") and \
                 (not self.check_if_driver_is_available(xdriver)):
             xdriver = self.get_vesa_driver()  # fallback to vesa
         bus_id_mark = "#"
@@ -250,16 +250,13 @@ EndSection
     def systemd_running():
         return os.path.isdir("/run/systemd/system")
 
-    def remove_proprietary_opengl(self, bumblebee):
+    def remove_proprietary_opengl(self):
         if not self.dryrun:
-            if not bumblebee:
-                os.system("""
-                mount -t tmpfs none /usr/lib64/opengl/nvidia &> /dev/null
-                sed -i '/LIBGL_DRIVERS_PATH/ s/.*//' /etc/profile.env
-                """)
-                self.fix_possible_opengl_misconfiguration('xorg-x11')
-            else:
-                print("Bumblebee enabled, not deactivating proprietary drivers")
+            os.system("""
+            mount -t tmpfs none /usr/lib64/opengl/nvidia &> /dev/null
+            sed -i '/LIBGL_DRIVERS_PATH/ s/.*//' /etc/profile.env
+            """)
+            self.fix_possible_opengl_misconfiguration('xorg-x11')
         else:
             print("I was about to remove proprietary OpenGL libraries")
 
@@ -448,29 +445,6 @@ EndSection
 
         return done_legacy, healthy
 
-    def generate_nvidia_bumblebee_steps(self, card_id):
-        done_legacy, healthy = self.setup_nvidia_drivers(card_id)
-        if not healthy:
-            print("NVIDIA drivers couldn't be loaded, cannot enable bumblebee")
-            return
-
-        if self.dryrun:
-            print("Was about to start bumblebee")
-            return
-
-        if not self.livecd:
-            print("LiveCD mode off, not starting bumblebee service")
-            return
-
-        # This is used by our Installer
-        with open("/tmp/.bumblebee.enabled", "w") as f:
-            pass
-
-        if self.openrc_running():
-            os.system("/etc/init.d/bumblebee start")
-        elif self.systemd_running():
-            os.system("/bin/systemctl start bumblebeed")
-
     def generate_nvidia_steps(self, videocard, cardnumber, total_cards, bus_id):
         comp_id, card_id = self.extract_pci_ids(videocard)
         done_legacy, healthy = self.setup_nvidia_drivers(card_id)
@@ -589,19 +563,6 @@ EndSection
 
         dst.close()
 
-    @staticmethod
-    def extract_3d_cards(lspci_list):
-        # bumblebee support
-        cards = []
-        for item in lspci_list:
-            try:
-                class_type = item.split()[1].strip('"')
-                if class_type == "0302":
-                    cards.append(item)
-            except IndexError:
-                continue
-        return cards
-
     def main(self, cmd_argv):
 
         self.options = cmd_argv[1:]
@@ -658,7 +619,6 @@ EndSection
         # Create videocards list
         lspci_out_split = lspci_output.split("\n")
         videocards = self.extract_vga_cards(lspci_out_split)
-        v3dcards = self.extract_3d_cards(lspci_out_split)
         # Run the program
         cardnumber = -1
 
@@ -666,14 +626,6 @@ EndSection
         forced_monitor_modes = False
         write_config = False
         update_modprobe_blist = False
-
-        # Retrieve 3d card data
-        for v3dcard in v3dcards:
-            company_id, card_id = self.extract_pci_ids(v3dcard)
-            if company_id == "10de":
-                print("NVIDIA Optimus 3D Acceleration detected, enabling bumblebee")
-                self.generate_nvidia_bumblebee_steps(card_id)
-                self.bb_enabled = True
 
         for videocard in videocards:
 
@@ -698,7 +650,7 @@ EndSection
                         self.modify_modprobe_blacklist('nouveau')
                     self.generate_generic_steps()
                     self.steps.append(('set_xorg_device', self.forced_xdriver,
-                                  cardnumber, total_cards, bus_id,))
+                                       cardnumber, total_cards, bus_id,))
                 write_config = True
 
             else:
@@ -713,7 +665,7 @@ EndSection
                             update_modprobe_blist = True
 
                         self.steps.append(('set_xorg_device', "nouveau",
-                                      cardnumber, total_cards, bus_id,))
+                                           cardnumber, total_cards, bus_id,))
                     else:
                         if not update_modprobe_blist:
                             self.modify_modprobe_blacklist('nvidia')
